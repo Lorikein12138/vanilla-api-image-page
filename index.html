@@ -1,0 +1,3183 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>VanillaAPI Image</title>
+    <link rel="icon" href="data:,">
+    <style>
+:root {
+  color-scheme: light;
+  --bg: #fafafa;
+  --surface: #ffffff;
+  --surface-2: #f7f7f8;
+  --surface-3: #f1f3f6;
+  --text: #252932;
+  --muted: #8b909b;
+  --muted-2: #b0b5bf;
+  --line: #e5e7eb;
+  --line-strong: #d8dbe2;
+  --blue: #2f7cf6;
+  --blue-soft: #eef5ff;
+  --green: #13a36b;
+  --green-soft: #ecfdf5;
+  --red: #e5484d;
+  --red-soft: #fff1f2;
+  --amber: #d79000;
+  --amber-soft: #fff8e6;
+  --shadow: 0 18px 60px rgba(31, 35, 45, 0.12);
+  --shadow-strong: 0 28px 90px rgba(31, 35, 45, 0.22);
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --header-height: 60px;
+  --content-max: 1560px;
+  --composer-max: 1120px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    Inter, "Segoe UI", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  letter-spacing: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  letter-spacing: 0;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(117, 127, 143, 0.55) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: rgba(117, 127, 143, 0.48);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(86, 95, 111, 0.68);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.app-header {
+  position: relative;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto minmax(120px, 1fr);
+  align-items: center;
+  height: var(--header-height);
+  border-bottom: 1px solid var(--line);
+  padding: 0 clamp(20px, 5.5vw, 92px);
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(18px);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+  font-size: 23px;
+  font-weight: 780;
+  text-decoration: none;
+  justify-self: start;
+}
+
+.brand-logo-space {
+  width: 28px;
+  height: 28px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-self: end;
+}
+
+.section-nav {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(96px, 1fr));
+  gap: 4px;
+  justify-self: center;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  padding: 4px;
+  background: rgba(247, 247, 248, 0.84);
+}
+
+.section-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 96px;
+  height: 38px;
+  border-radius: 11px;
+  color: #777d89;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 720;
+  transition:
+    transform 160ms var(--ease),
+    background 160ms var(--ease),
+    color 160ms var(--ease),
+    box-shadow 160ms var(--ease);
+}
+
+.section-tab:hover {
+  color: var(--text);
+}
+
+.section-tab:active {
+  transform: scale(0.98);
+}
+
+.section-tab.is-active {
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: 0 8px 22px rgba(31, 35, 45, 0.08);
+}
+
+.gallery-badge {
+  display: inline-grid;
+  min-width: 20px;
+  height: 20px;
+  place-items: center;
+  border-radius: 999px;
+  padding: 0 6px;
+  color: #5e6673;
+  background: var(--surface-3);
+  font-size: 12px;
+  font-weight: 760;
+  line-height: 1;
+}
+
+.section-tab.is-active .gallery-badge {
+  color: #ffffff;
+  background: var(--blue);
+}
+
+.icon-button,
+.toolbar-button,
+.mini-icon,
+.attach-button,
+.send-button {
+  display: inline-grid;
+  place-items: center;
+  color: #565c67;
+  transition:
+    transform 160ms var(--ease),
+    background 160ms var(--ease),
+    border-color 160ms var(--ease),
+    color 160ms var(--ease),
+    box-shadow 160ms var(--ease),
+    opacity 160ms var(--ease);
+}
+
+.icon-button {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: transparent;
+}
+
+.icon-button:hover,
+.toolbar-button:hover,
+.mini-icon:hover {
+  color: var(--text);
+  background: var(--surface-3);
+}
+
+.icon-button:active,
+.toolbar-button:active,
+.attach-button:active,
+.send-button:active {
+  transform: scale(0.96);
+}
+
+.workspace {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: calc(100vh - var(--header-height));
+  padding: 28px clamp(20px, 4vw, 72px) clamp(188px, 22vh, 238px);
+}
+
+.workspace[data-section="workbench"] {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.workspace[data-section="gallery"] {
+  padding-bottom: 32px;
+}
+
+.workspace[data-section="workbench"] .task-surface {
+  overflow: hidden;
+  padding-top: clamp(44px, 10vh, 118px);
+}
+
+.workspace[data-section="gallery"] .task-surface {
+  padding-top: clamp(34px, 7vh, 82px);
+}
+
+.toolbar {
+  display: grid;
+  width: min(var(--content-max), 100%);
+  grid-template-columns: 54px 156px 54px minmax(360px, 1fr);
+  gap: 12px;
+  align-items: center;
+  justify-self: center;
+}
+
+.toolbar-button,
+.status-menu-button,
+.search-field {
+  height: 52px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+}
+
+.toolbar-button {
+  width: 52px;
+  color: #a0a5b0;
+}
+
+.toolbar-button.is-active {
+  border-color: #ffd166;
+  color: #f5a400;
+  background: #fff9e8;
+}
+
+.toolbar-button:disabled {
+  opacity: 0.45;
+}
+
+.status-select {
+  position: relative;
+  min-width: 0;
+}
+
+.status-select select {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.status-menu-button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 14px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.9);
+  font-weight: 620;
+  transition:
+    border-color 160ms var(--ease),
+    box-shadow 160ms var(--ease),
+    background 160ms var(--ease),
+    transform 160ms var(--ease);
+}
+
+.status-menu-button:hover {
+  background: #fff;
+}
+
+.status-menu-button svg {
+  width: 16px;
+  height: 16px;
+  color: #8f95a1;
+  transition: transform 160ms var(--ease);
+}
+
+.status-select.is-open .status-menu-button svg {
+  transform: rotate(180deg);
+}
+
+.status-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 30;
+  display: grid;
+  width: 100%;
+  min-width: 178px;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 18px 48px rgba(31, 35, 45, 0.14);
+  animation: fade-up 140ms var(--ease) both;
+}
+
+.status-option {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 11px;
+  padding: 0 10px;
+  color: #5f6570;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 660;
+}
+
+.status-option:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.status-option.is-selected {
+  color: #246ee6;
+  background: var(--blue-soft);
+}
+
+.search-field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.search-field svg {
+  flex: 0 0 auto;
+  color: #a0a5b0;
+}
+
+.search-field input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  color: var(--text);
+  background: transparent;
+}
+
+.search-field input::placeholder,
+.composer textarea::placeholder {
+  color: #a1a6b1;
+}
+
+.toolbar-button:focus-visible,
+.section-tab:focus-visible,
+.icon-button:focus-visible,
+.mini-icon:focus-visible,
+.attach-button:focus-within,
+.send-button:focus-visible,
+.settings-tabs button:focus-visible,
+.status-menu-button:focus-visible,
+.search-field:focus-within,
+.composer textarea:focus-visible,
+.select-control:focus-visible,
+.parameter-bar input:focus-visible,
+.settings-panel input:focus-visible,
+.ghost-button:focus-visible {
+  outline: none;
+  border-color: rgba(47, 124, 246, 0.55);
+  box-shadow: 0 0 0 4px rgba(47, 124, 246, 0.12);
+}
+
+.task-surface {
+  position: relative;
+  display: grid;
+  width: min(var(--content-max), 100%);
+  min-height: 0;
+  place-items: start center;
+  overflow: auto;
+  padding: clamp(58px, 11vh, 126px) 0 20px;
+  justify-self: center;
+}
+
+.empty-state {
+  display: grid;
+  gap: 16px;
+  justify-items: center;
+  margin-top: clamp(18px, 4vh, 58px);
+  color: #a5aab5;
+  text-align: center;
+  animation: fade-up 260ms var(--ease) both;
+}
+
+.empty-state svg {
+  width: 62px;
+  height: 62px;
+  color: #d8dbe2;
+  stroke-width: 1.8;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 17px;
+}
+
+.error-box {
+  position: fixed;
+  top: 84px;
+  left: 50%;
+  z-index: 25;
+  width: min(720px, calc(100vw - 32px));
+  transform: translateX(-50%);
+  border: 1px solid rgba(229, 72, 77, 0.26);
+  border-radius: 14px;
+  padding: 14px 16px;
+  color: #b42318;
+  background: rgba(255, 241, 242, 0.96);
+  box-shadow: var(--shadow);
+  line-height: 1.5;
+  pointer-events: none;
+  animation: toast-in 220ms var(--ease) both;
+}
+
+.task-grid {
+  display: grid;
+  align-self: start;
+  width: min(1320px, 100%);
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.task-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 10px 32px rgba(31, 35, 45, 0.06);
+  animation: card-in 260ms var(--ease) both;
+  transition:
+    transform 180ms var(--ease),
+    box-shadow 180ms var(--ease),
+    border-color 180ms var(--ease);
+}
+
+.task-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--line-strong);
+  box-shadow: 0 18px 42px rgba(31, 35, 45, 0.1);
+}
+
+.task-card-head,
+.task-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.status-badge {
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.is-pending .status-badge {
+  color: var(--amber);
+  background: var(--amber-soft);
+}
+
+.is-success .status-badge {
+  color: var(--green);
+  background: var(--green-soft);
+}
+
+.is-error .status-badge {
+  color: var(--red);
+  background: var(--red-soft);
+}
+
+.mini-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: transparent;
+}
+
+.mini-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.mini-icon.is-active {
+  color: #f5a400;
+}
+
+.mini-icon.is-active svg {
+  fill: currentColor;
+}
+
+.task-prompt {
+  display: -webkit-box;
+  min-height: 44px;
+  max-height: 44px;
+  margin: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.task-params {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  align-content: flex-start;
+  gap: 6px;
+}
+
+.task-params span {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 26px;
+  flex: 0 1 auto;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 9px;
+  overflow: hidden;
+  color: #717783;
+  background: var(--surface-2);
+  font-size: 12px;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-media {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+  gap: 8px;
+  min-height: 164px;
+}
+
+.image-tile,
+.loading-tile,
+.error-tile {
+  display: grid;
+  min-height: 164px;
+  overflow: hidden;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--surface-3);
+}
+
+.image-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 240ms var(--ease);
+}
+
+.image-tile:hover img {
+  transform: scale(1.03);
+}
+
+.loading-tile {
+  position: relative;
+  overflow: hidden;
+}
+
+.loading-tile::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.75) 45%, transparent 80%);
+  animation: shimmer 1.2s linear infinite;
+}
+
+.error-tile {
+  padding: 14px;
+  color: #b42318;
+  background: var(--red-soft);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.task-card-foot {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.task-card-foot button {
+  border-radius: 10px;
+  padding: 7px 10px;
+  color: var(--blue);
+  background: var(--blue-soft);
+  font-weight: 720;
+}
+
+.composer {
+  position: fixed;
+  right: 50%;
+  bottom: clamp(28px, 4vh, 48px);
+  z-index: 15;
+  display: grid;
+  gap: 12px;
+  width: min(var(--composer-max), calc(100vw - 72px));
+  transform: translateX(50%);
+  border: 1px solid rgba(216, 219, 226, 0.9);
+  border-radius: 26px;
+  padding: 18px 20px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18px 54px rgba(31, 35, 45, 0.12);
+  backdrop-filter: blur(22px);
+  transition:
+    transform 220ms var(--ease),
+    box-shadow 220ms var(--ease),
+    border-color 220ms var(--ease);
+}
+
+.composer:focus-within {
+  transform: translateX(50%);
+  border-color: rgba(47, 124, 246, 0.28);
+  box-shadow: 0 24px 80px rgba(31, 35, 45, 0.16);
+}
+
+.composer textarea {
+  width: 100%;
+  min-height: 48px;
+  max-height: 144px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 13px 16px;
+  resize: none;
+  color: var(--text);
+  background: #fff;
+  outline: none;
+  line-height: 1.45;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+
+.composer textarea::-webkit-scrollbar {
+  width: 9px;
+}
+
+.composer textarea::-webkit-scrollbar-thumb {
+  border-width: 3px;
+}
+
+.attachment-preview {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.attachment-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 260px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 6px;
+  color: #666c78;
+  background: var(--surface-2);
+  font-size: 12px;
+}
+
+.attachment-chip img {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.attachment-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachment-remove {
+  display: inline-grid;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 9px;
+  color: #7b828e;
+  background: #fff;
+  transition:
+    background 160ms var(--ease),
+    color 160ms var(--ease),
+    transform 160ms var(--ease);
+}
+
+.attachment-remove:hover {
+  color: #b42318;
+  background: var(--red-soft);
+}
+
+.attachment-remove:active {
+  transform: scale(0.94);
+}
+
+.attachment-remove svg {
+  width: 15px;
+  height: 15px;
+}
+
+.composer-meta {
+  display: none;
+  justify-content: space-between;
+  gap: 16px;
+  color: #9298a4;
+  font-size: 13px;
+}
+
+.parameter-bar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(92px, 1fr));
+  justify-content: center;
+  gap: 10px;
+  align-items: end;
+}
+
+.parameter-bar label {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  color: #8f95a1;
+  font-size: 13px;
+}
+
+.parameter-bar select.enhanced-native-select {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.parameter-bar input {
+  width: 100%;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0 13px;
+  color: var(--text);
+  background: #fff;
+  outline: none;
+}
+
+.select-control {
+  display: flex;
+  width: 100%;
+  height: 36px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0 11px 0 13px;
+  color: var(--text);
+  background: #fff;
+  font-size: 13px;
+  transition:
+    border-color 160ms var(--ease),
+    box-shadow 160ms var(--ease),
+    background 160ms var(--ease);
+}
+
+.select-control:hover {
+  background: var(--surface-2);
+}
+
+.select-control svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  color: #8f95a1;
+  transition: transform 160ms var(--ease);
+}
+
+.parameter-select.is-open .select-control svg {
+  transform: rotate(180deg);
+}
+
+.select-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.select-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 35;
+  display: grid;
+  width: max(100%, 220px);
+  max-height: min(320px, 52vh);
+  overflow: auto;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 18px 48px rgba(31, 35, 45, 0.14);
+  animation: fade-up 140ms var(--ease) both;
+}
+
+.select-group-label {
+  padding: 9px 10px 4px;
+  color: #9aa0ab;
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.select-option {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  border-radius: 10px;
+  padding: 0 10px;
+  color: #5f6570;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 650;
+  text-align: left;
+}
+
+.select-option:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.select-option.is-selected {
+  color: #246ee6;
+  background: var(--blue-soft);
+}
+
+.composer-actions {
+  display: flex;
+  justify-content: center;
+  gap: 9px;
+}
+
+.attach-button,
+.send-button {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+}
+
+.attach-button {
+  color: #767d89;
+  background: #e9ebef;
+}
+
+.attach-button:hover {
+  color: var(--text);
+  background: #dde1e8;
+}
+
+.attach-button input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.send-button {
+  color: #fff;
+  background: #bfc4ce;
+}
+
+.send-button:not(:disabled) {
+  background: var(--blue);
+  box-shadow: 0 10px 24px rgba(47, 124, 246, 0.28);
+}
+
+.send-button:not(:disabled):hover {
+  background: #246ee6;
+}
+
+.send-button.is-loading svg {
+  animation: pulse-send 900ms ease-in-out infinite;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(3px);
+  animation: overlay-in 160ms var(--ease) both;
+}
+
+.modal-overlay[hidden] {
+  display: none;
+}
+
+.guide-dialog,
+.settings-dialog {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: var(--shadow-strong);
+  animation: modal-in 220ms var(--ease) both;
+}
+
+.guide-dialog {
+  width: min(560px, calc(100vw - 28px));
+}
+
+.settings-dialog {
+  width: min(960px, calc(100vw - 32px));
+  height: min(760px, calc(100vh - 32px));
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 86px;
+  border-bottom: 1px solid var(--line);
+  padding: 0 28px;
+}
+
+.modal-header > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-header svg {
+  color: var(--blue);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.modal-meta {
+  color: #9ca1ad;
+  font-weight: 760;
+}
+
+.guide-content {
+  display: grid;
+  gap: 18px;
+  padding: 26px 28px 18px;
+}
+
+.guide-content h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.guide-content ul {
+  margin: 0;
+  padding-left: 22px;
+  color: #5f6570;
+  line-height: 1.8;
+}
+
+kbd {
+  border: 1px solid var(--line-strong);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  padding: 1px 6px;
+  color: #5f6570;
+  background: var(--surface-2);
+  font-family: inherit;
+}
+
+.guide-dialog footer {
+  margin: 0 28px 28px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+  color: #858b96;
+  text-align: center;
+  font-weight: 700;
+}
+
+.settings-body {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  height: calc(100% - 86px);
+}
+
+.settings-tabs {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  border-right: 1px solid var(--line);
+  padding: 24px 16px;
+  background: rgba(248, 249, 251, 0.78);
+}
+
+.settings-tabs button {
+  height: 50px;
+  border-radius: 14px;
+  padding: 0 16px;
+  color: #5e6470;
+  background: transparent;
+  text-align: left;
+  font-weight: 680;
+  transition:
+    background 160ms var(--ease),
+    color 160ms var(--ease),
+    box-shadow 160ms var(--ease),
+    transform 160ms var(--ease);
+}
+
+.settings-tabs button:hover {
+  background: #fff;
+}
+
+.settings-tabs button.active {
+  color: #246ee6;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(31, 35, 45, 0.07);
+}
+
+.settings-content {
+  overflow: auto;
+  padding: 34px 30px 40px;
+}
+
+.settings-panel {
+  display: none;
+  animation: fade-up 180ms var(--ease) both;
+}
+
+.settings-panel.active {
+  display: grid;
+  align-content: start;
+  gap: 20px;
+}
+
+.settings-panel label {
+  display: grid;
+  gap: 9px;
+  color: #5f6570;
+  font-size: 16px;
+}
+
+.settings-panel input {
+  width: 100%;
+  height: 52px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 0 16px;
+  color: var(--text);
+  background: #fff;
+  outline: none;
+}
+
+.settings-panel input:disabled {
+  color: #6f7480;
+  background: var(--surface-2);
+}
+
+.settings-panel small,
+.setting-row p {
+  margin: 0;
+  color: #858b96;
+  line-height: 1.55;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  border-bottom: 1px solid var(--line);
+  padding: 0 0 20px;
+}
+
+.setting-row h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+
+.switch {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  flex: 0 0 auto;
+}
+
+.switch input {
+  position: absolute;
+  opacity: 0;
+}
+
+.switch span {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: #d3d6dd;
+  transition: background 160ms var(--ease);
+}
+
+.switch span::after {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.18);
+  content: "";
+  transition: transform 160ms var(--ease);
+}
+
+.switch input:checked + span {
+  background: var(--blue);
+}
+
+.switch input:checked + span::after {
+  transform: translateX(18px);
+}
+
+.readonly-pill {
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px 14px;
+  color: #636a76;
+  background: #fff;
+}
+
+.ghost-button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0 12px;
+  color: var(--text);
+  background: #fff;
+  font-size: 13px;
+  font-weight: 680;
+}
+
+.ghost-button:hover {
+  background: var(--surface-2);
+}
+
+.log-panel {
+  min-height: 100%;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface-2);
+}
+
+.log-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+  padding: 12px 14px;
+}
+
+.log-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.log-output {
+  min-height: 360px;
+  max-height: 520px;
+  margin: 0;
+  overflow: auto;
+  padding: 14px;
+  color: #263442;
+  font-family:
+    "Cascadia Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pulse-send {
+  0%,
+  100% {
+    transform: translateX(0);
+    opacity: 0.65;
+  }
+  50% {
+    transform: translateX(3px);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+@media (max-width: 900px) {
+  body {
+    overflow: auto;
+  }
+
+  .app-header {
+    padding: 0 16px;
+  }
+
+  .brand {
+    font-size: 20px;
+  }
+
+  .brand-logo-space {
+    display: none;
+  }
+
+  .workspace {
+    min-height: calc(100vh - var(--header-height));
+    height: auto;
+    padding: 16px 12px 292px;
+  }
+
+  .workspace[data-section="gallery"] {
+    padding-bottom: 22px;
+  }
+
+  .toolbar {
+    grid-template-columns: 48px minmax(0, 1fr) 48px;
+  }
+
+  .toolbar-button,
+  .status-menu-button,
+  .search-field {
+    height: 48px;
+  }
+
+  .search-field {
+    grid-column: 1 / -1;
+  }
+
+  .task-surface {
+    min-height: 380px;
+  }
+
+  .composer {
+    width: calc(100vw - 20px);
+    bottom: 10px;
+    border-radius: 22px;
+    padding: 16px;
+  }
+
+  .composer-meta {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .parameter-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .composer-actions {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: stretch;
+  }
+
+  .attach-button,
+  .send-button {
+    width: 100%;
+  }
+
+  .settings-dialog {
+    width: calc(100vw - 16px);
+    height: calc(100vh - 16px);
+    border-radius: 22px;
+  }
+
+  .settings-body {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-tabs {
+    display: flex;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding: 12px;
+  }
+
+  .settings-tabs button {
+    flex: 0 0 auto;
+  }
+
+  .settings-content {
+    padding: 22px 18px 28px;
+  }
+
+  .setting-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 760px) {
+  :root {
+    --header-height: 112px;
+  }
+
+  .app-header {
+    grid-template-areas:
+      "brand actions"
+      "nav nav";
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 10px;
+    height: var(--header-height);
+    padding: 10px 12px 12px;
+  }
+
+  .brand {
+    grid-area: brand;
+    min-width: 0;
+    font-size: 18px;
+  }
+
+  .brand span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .section-nav {
+    grid-area: nav;
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .section-tab {
+    min-width: 0;
+  }
+
+  .header-actions {
+    grid-area: actions;
+  }
+
+  .workspace[data-section="workbench"] .task-surface {
+    min-height: 300px;
+    padding-top: 28px;
+  }
+}
+
+    </style>
+  </head>
+  <body>
+    <header class="app-header">
+      <a class="brand" href="#" aria-label="VanillaAPI Image 首页">
+        <span class="brand-logo-space" aria-hidden="true"></span>
+        <span>VanillaAPI Image</span>
+      </a>
+      <nav class="section-nav" aria-label="主导航">
+        <button class="section-tab is-active" type="button" data-section="workbench" aria-current="page">工作台</button>
+        <button class="section-tab" type="button" data-section="gallery">
+          <span>图库</span>
+          <span id="gallery-badge" class="gallery-badge" aria-label="图库任务数量">0</span>
+        </button>
+      </nav>
+      <div class="header-actions">
+        <button id="help-button" class="icon-button" type="button" aria-label="操作指南">
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.1 9a3 3 0 1 1 4.8 2.4c-.9.6-1.4 1.1-1.4 2.1"></path>
+            <path d="M12 17h.01"></path>
+          </svg>
+        </button>
+        <button id="settings-button" class="icon-button" type="button" aria-label="设置">
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"></path>
+            <path d="M19.4 15a1.8 1.8 0 0 0 .4 2l.1.1a2.1 2.1 0 0 1-3 3l-.1-.1a1.8 1.8 0 0 0-2-.4 1.8 1.8 0 0 0-1.1 1.7V21a2.1 2.1 0 0 1-4.2 0v-.2a1.8 1.8 0 0 0-1.1-1.7 1.8 1.8 0 0 0-2 .4l-.1.1a2.1 2.1 0 0 1-3-3l.1-.1a1.8 1.8 0 0 0 .4-2 1.8 1.8 0 0 0-1.7-1.1H3a2.1 2.1 0 0 1 0-4.2h.2a1.8 1.8 0 0 0 1.7-1.1 1.8 1.8 0 0 0-.4-2l-.1-.1a2.1 2.1 0 0 1 3-3l.1.1a1.8 1.8 0 0 0 2 .4 1.8 1.8 0 0 0 1.1-1.7V3a2.1 2.1 0 0 1 4.2 0v.2a1.8 1.8 0 0 0 1.1 1.7 1.8 1.8 0 0 0 2-.4l.1-.1a2.1 2.1 0 0 1 3 3l-.1.1a1.8 1.8 0 0 0-.4 2 1.8 1.8 0 0 0 1.7 1.1h.2a2.1 2.1 0 0 1 0 4.2h-.2a1.8 1.8 0 0 0-1.8 1.2Z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="workspace" data-section="workbench">
+      <section class="toolbar" aria-label="任务筛选">
+        <button id="favorite-filter-button" class="toolbar-button" type="button" aria-pressed="false" aria-label="只看收藏">
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"></path>
+          </svg>
+        </button>
+        <div class="status-select" id="status-select">
+          <span class="sr-only">状态筛选</span>
+          <select id="status-filter">
+            <option value="all">全部状态</option>
+            <option value="pending">生成中</option>
+            <option value="success">成功</option>
+            <option value="error">失败</option>
+          </select>
+          <button id="status-menu-button" class="status-menu-button" type="button" aria-haspopup="listbox" aria-expanded="false">
+            <span id="status-menu-label">全部状态</span>
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="m6 9 6 6 6-6"></path>
+            </svg>
+          </button>
+          <div id="status-menu" class="status-menu" role="listbox" hidden>
+            <button class="status-option is-selected" type="button" role="option" data-status-value="all" aria-selected="true">全部状态</button>
+            <button class="status-option" type="button" role="option" data-status-value="pending" aria-selected="false">生成中</button>
+            <button class="status-option" type="button" role="option" data-status-value="success" aria-selected="false">成功</button>
+            <button class="status-option" type="button" role="option" data-status-value="error" aria-selected="false">失败</button>
+          </div>
+        </div>
+        <button id="clear-failed-button" class="toolbar-button" type="button" aria-label="清除失败记录">
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="M3 6h18"></path>
+            <path d="M8 6V4h8v2"></path>
+            <path d="m19 6-1 14H6L5 6"></path>
+            <path d="M10 11v5"></path>
+            <path d="M14 11v5"></path>
+          </svg>
+        </button>
+        <label class="search-field">
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="m16 16 4 4"></path>
+          </svg>
+          <input id="task-search" type="search" placeholder="搜索提示词、参数...">
+        </label>
+      </section>
+
+      <section class="task-surface" aria-labelledby="task-title">
+        <h1 id="task-title" class="sr-only">任务记录</h1>
+        <div id="error-box" class="error-box" hidden></div>
+        <div id="empty-state" class="empty-state">
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <rect x="3" y="4" width="18" height="16" rx="3"></rect>
+            <circle cx="8.5" cy="9" r="1.5"></circle>
+            <path d="m5 17 4.2-4.2a2 2 0 0 1 2.8 0L17 18"></path>
+            <path d="m14 15 1.2-1.2a2 2 0 0 1 2.8 0L21 17"></path>
+          </svg>
+          <p>输入提示词开始生成图片</p>
+        </div>
+        <div id="result-grid" class="task-grid" aria-live="polite"></div>
+      </section>
+
+      <form id="generator-form" class="composer" aria-label="图片生成输入">
+        <textarea
+          id="prompt"
+          name="prompt"
+          rows="1"
+          autocomplete="off"
+          placeholder="描述你想生成的图片，可输入 @ 指定当前参考图..."
+          required
+        ></textarea>
+        <div class="attachment-preview" id="attachment-preview" hidden></div>
+        <div class="parameter-bar">
+          <label>
+            <span>尺寸</span>
+            <select id="size" name="size">
+              <option value="auto">自动</option>
+              <optgroup label="方图">
+                <option value="512x512">512x512</option>
+                <option value="768x768">768x768</option>
+                <option value="1024x1024">1024x1024</option>
+                <option value="1536x1536">1536x1536</option>
+                <option value="2048x2048">2048x2048</option>
+              </optgroup>
+              <optgroup label="横图">
+                <option value="1024x768">1024x768</option>
+                <option value="1280x720">1280x720</option>
+                <option value="1536x864">1536x864</option>
+                <option value="1536x1024">1536x1024</option>
+                <option value="1792x1024">1792x1024</option>
+                <option value="1920x1088">1920x1088</option>
+                <option value="2048x1152">2048x1152</option>
+                <option value="2560x1440">2560x1440</option>
+                <option value="3840x2160">3840x2160</option>
+              </optgroup>
+              <optgroup label="竖图">
+                <option value="768x1024">768x1024</option>
+                <option value="720x1280">720x1280</option>
+                <option value="864x1536">864x1536</option>
+                <option value="1024x1536">1024x1536</option>
+                <option value="1024x1792">1024x1792</option>
+                <option value="1088x1920">1088x1920</option>
+                <option value="1152x2048">1152x2048</option>
+                <option value="1440x2560">1440x2560</option>
+                <option value="2160x3840">2160x3840</option>
+              </optgroup>
+              <optgroup label="宽屏">
+                <option value="1536x656">1536x656</option>
+                <option value="1920x816">1920x816</option>
+                <option value="2560x1088">2560x1088</option>
+                <option value="3440x1440">3440x1440</option>
+              </optgroup>
+            </select>
+          </label>
+          <label>
+            <span>格式</span>
+            <select id="output-format" name="outputFormat">
+              <option value="png">PNG</option>
+              <option value="jpeg">JPEG</option>
+              <option value="webp">WEBP</option>
+            </select>
+          </label>
+          <label>
+            <span>数量</span>
+            <input id="quantity" name="quantity" type="number" min="1" max="10" value="1">
+          </label>
+          <label>
+            <span>背景</span>
+            <select id="background" name="background">
+              <option value="auto">自动</option>
+              <option value="transparent">透明</option>
+              <option value="opaque">不透明</option>
+            </select>
+          </label>
+          <label>
+            <span>审核</span>
+            <select id="moderation" name="moderation">
+              <option value="auto">自动</option>
+              <option value="low">宽松</option>
+            </select>
+          </label>
+          <label>
+            <span>质量</span>
+            <select id="quality" name="quality">
+              <option value="auto">自动</option>
+              <option value="low">低</option>
+              <option value="medium">中</option>
+              <option value="high">高</option>
+            </select>
+          </label>
+          <div class="composer-actions">
+            <label class="attach-button" aria-label="添加参考图">
+              <input id="images" name="images" type="file" accept="image/*" multiple>
+              <svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="m21.4 11.6-8.9 8.9a6 6 0 0 1-8.5-8.5l9.5-9.5a4 4 0 0 1 5.7 5.7l-9.6 9.6a2 2 0 0 1-2.8-2.8l8.9-8.9"></path>
+              </svg>
+            </label>
+            <button id="submit-button" class="send-button" type="submit" aria-label="生成图像" disabled>
+              <svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="M5 12h14"></path>
+                <path d="m13 6 6 6-6 6"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </form>
+    </main>
+
+    <div id="help-modal" class="modal-overlay" hidden>
+      <section class="guide-dialog" aria-labelledby="guide-title">
+        <header class="modal-header">
+          <div>
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M9.1 9a3 3 0 1 1 4.8 2.4c-.9.6-1.4 1.1-1.4 2.1"></path>
+              <path d="M12 17h.01"></path>
+            </svg>
+            <h2 id="guide-title">操作指南</h2>
+          </div>
+          <button id="close-help-button" class="icon-button" type="button" aria-label="关闭指南">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M18 6 6 18"></path>
+              <path d="m6 6 12 12"></path>
+            </svg>
+          </button>
+        </header>
+        <div class="guide-content">
+          <h3>生成流程</h3>
+          <ul>
+            <li>在工作台输入提示词，选择尺寸、格式、数量、背景、审核和质量后提交。</li>
+            <li>只输入提示词会使用文生图；添加参考图会自动使用图文编辑。</li>
+            <li>提交后任务会进入图库，工作台保持干净用于继续创作。</li>
+          </ul>
+          <h3>图库管理</h3>
+          <ul>
+            <li>在顶部切换工作台和图库，图库徽标会显示当前任务数量。</li>
+            <li>图库支持按状态、收藏和关键词筛选生成记录。</li>
+            <li>失败任务可重试，也可以通过顶部删除按钮批量清除。</li>
+            <li>图库会自动保存到本地缓存，刷新页面后会恢复已生成图片。</li>
+          </ul>
+          <h3>设置与日志</h3>
+          <ul>
+            <li>设置中填写 API 地址和密钥，模型固定为 gpt-image-2。</li>
+            <li>请求日志会记录接口、状态和错误信息，便于排查问题。</li>
+            <li><kbd>Ctrl</kbd> + <kbd>Enter</kbd> 可快速提交当前提示词。</li>
+          </ul>
+        </div>
+        <footer>VanillaAPI Image</footer>
+      </section>
+    </div>
+
+    <div id="settings-modal" class="modal-overlay" hidden>
+      <section class="settings-dialog" aria-labelledby="settings-title">
+        <header class="modal-header">
+          <div>
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"></path>
+              <path d="M19.4 15a1.8 1.8 0 0 0 .4 2l.1.1a2.1 2.1 0 0 1-3 3l-.1-.1a1.8 1.8 0 0 0-2-.4 1.8 1.8 0 0 0-1.1 1.7V21a2.1 2.1 0 0 1-4.2 0v-.2a1.8 1.8 0 0 0-1.1-1.7 1.8 1.8 0 0 0-2 .4l-.1.1a2.1 2.1 0 0 1-3-3l.1-.1a1.8 1.8 0 0 0 .4-2 1.8 1.8 0 0 0-1.7-1.1H3a2.1 2.1 0 0 1 0-4.2h.2a1.8 1.8 0 0 0 1.7-1.1 1.8 1.8 0 0 0-.4-2l-.1-.1a2.1 2.1 0 0 1 3-3l.1.1a1.8 1.8 0 0 0 2 .4 1.8 1.8 0 0 0 1.1-1.7V3a2.1 2.1 0 0 1 4.2 0v.2a1.8 1.8 0 0 0 1.1 1.7 1.8 1.8 0 0 0 2-.4l.1-.1a2.1 2.1 0 0 1 3 3l-.1.1a1.8 1.8 0 0 0-.4 2 1.8 1.8 0 0 0 1.7 1.1h.2a2.1 2.1 0 0 1 0 4.2h-.2a1.8 1.8 0 0 0-1.8 1.2Z"></path>
+            </svg>
+            <h2 id="settings-title">设置</h2>
+          </div>
+          <div class="modal-meta">
+            <span>v0.2.0</span>
+            <button id="close-settings-button" class="icon-button" type="button" aria-label="关闭设置">
+              <svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="M18 6 6 18"></path>
+                <path d="m6 6 12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </header>
+
+        <div class="settings-body">
+          <aside class="settings-tabs" aria-label="设置分类">
+            <button class="active" type="button" data-settings-tab="habits">习惯配置</button>
+            <button type="button" data-settings-tab="api">API 配置</button>
+            <button type="button" data-settings-tab="logs">请求日志</button>
+          </aside>
+
+          <div class="settings-content">
+            <section class="settings-panel active" data-settings-panel="habits">
+              <div class="setting-row">
+                <div>
+                  <h3>提交任务后清空输入框</h3>
+                  <p>提交成功创建任务后，自动清空提示词和参考图。</p>
+                </div>
+                <label class="switch">
+                  <input id="clear-after-submit" type="checkbox">
+                  <span></span>
+                </label>
+              </div>
+              <div class="setting-row">
+                <div>
+                  <h3>任务提交方式</h3>
+                  <p>当前固定使用 Ctrl + Enter 提交，Enter 在输入框内换行。</p>
+                </div>
+                <span class="readonly-pill">Ctrl + Enter</span>
+              </div>
+            </section>
+
+            <section class="settings-panel" data-settings-panel="api">
+              <label>
+                <span>API URL</span>
+                <input id="api-base-url" type="url" value="https://api.lorikein.cn">
+              </label>
+              <label>
+                <span>API Key</span>
+                <input id="api-key" type="password" placeholder="sk-..." autocomplete="off">
+              </label>
+              <label>
+                <span>模型 ID</span>
+                <input type="text" value="gpt-image-2" disabled>
+                <small>模型固定为 gpt-image-2。</small>
+              </label>
+              <label>
+                <span>请求超时（秒）</span>
+                <input type="number" value="600" min="1">
+              </label>
+            </section>
+
+            <section class="settings-panel" data-settings-panel="logs">
+              <div class="log-panel" aria-labelledby="log-title">
+                <div class="log-header">
+                  <h3 id="log-title">请求日志</h3>
+                  <div class="log-actions">
+                    <button id="copy-log-button" class="ghost-button" type="button">复制</button>
+                    <button id="clear-log-button" class="ghost-button" type="button">清空</button>
+                  </div>
+                </div>
+                <pre id="log-output" class="log-output">暂无日志。</pre>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+    </div>
+    <script>
+const MODEL = 'gpt-image-2';
+const DEFAULT_API_BASE_URL = 'https://api.lorikein.cn';
+
+const STORAGE_KEYS = {
+  apiBaseUrl: 'vanillaapi-image.apiBaseUrl',
+  apiKey: 'vanillaapi-image.apiKey',
+  clearAfterSubmit: 'vanillaapi-image.clearAfterSubmit',
+  taskCache: 'vanillaapi-image.taskCache'
+};
+const TASK_CACHE_VERSION = 1;
+const TASK_CACHE_DB_NAME = 'vanillaapi-image-cache';
+const TASK_CACHE_STORE_NAME = 'state';
+const TASK_CACHE_KEY = 'tasks';
+const MAX_CACHED_TASKS = 80;
+const INTERRUPTED_TASK_MESSAGE = '页面刷新后该生成任务已中断，请重新提交。';
+
+const logEntries = [];
+const tasks = [];
+const filters = {
+  status: 'all',
+  query: '',
+  favoriteOnly: false
+};
+let activeSection = 'workbench';
+let attachmentObjectUrls = [];
+let errorTimer = 0;
+
+function normalizeApiBaseUrl(apiBaseUrl) {
+  const normalized = String(apiBaseUrl || DEFAULT_API_BASE_URL).trim().replace(/\/+$/, '');
+
+  if (!normalized) {
+    throw new Error('请填写 API 地址');
+  }
+
+  return normalized.replace(/\/v1$/i, '');
+}
+
+function normalizeQuantity(quantity) {
+  const parsed = Number.parseInt(quantity, 10);
+
+  if (Number.isNaN(parsed)) {
+    return 1;
+  }
+
+  return Math.min(Math.max(parsed, 1), 10);
+}
+
+const PARAM_TEXT = {
+  background: {
+    auto: '背景 自动',
+    transparent: '透明背景',
+    opaque: '不透明背景'
+  },
+  moderation: {
+    auto: '审核 自动',
+    low: '审核 宽松'
+  },
+  quality: {
+    auto: '质量 自动',
+    low: '低质量',
+    medium: '中质量',
+    high: '高质量'
+  }
+};
+
+const DEFAULT_GENERATION_PARAMS = {
+  size: 'auto',
+  outputFormat: 'png',
+  quantity: 1,
+  background: 'auto',
+  moderation: 'auto',
+  quality: 'auto'
+};
+
+function appendGenerationParams(
+  target,
+  {
+    size = 'auto',
+    outputFormat = 'png',
+    quantity = 1,
+    background = 'auto',
+    moderation = 'auto',
+    quality = 'auto'
+  }
+) {
+  const normalizedSize = String(size || 'auto');
+  const normalizedFormat = String(outputFormat || 'png').toLowerCase();
+  const normalizedQuantity = normalizeQuantity(quantity);
+  const normalizedBackground = String(background || 'auto').toLowerCase();
+  const normalizedModeration = String(moderation || 'auto').toLowerCase();
+  const normalizedQuality = String(quality || 'auto').toLowerCase();
+
+  if (target instanceof FormData) {
+    if (normalizedSize !== 'auto') {
+      target.append('size', normalizedSize);
+    }
+    target.append('output_format', normalizedFormat);
+    target.append('n', String(normalizedQuantity));
+    target.append('background', normalizedBackground);
+    target.append('moderation', normalizedModeration);
+    target.append('quality', normalizedQuality);
+    return;
+  }
+
+  if (normalizedSize !== 'auto') {
+    target.size = normalizedSize;
+  }
+  target.output_format = normalizedFormat;
+  target.n = normalizedQuantity;
+  target.background = normalizedBackground;
+  target.moderation = normalizedModeration;
+  target.quality = normalizedQuality;
+}
+
+function buildImageRequest({
+  apiBaseUrl = DEFAULT_API_BASE_URL,
+  apiKey,
+  prompt,
+  images = [],
+  size = 'auto',
+  outputFormat = 'png',
+  quantity = 1,
+  background = 'auto',
+  moderation = 'auto',
+  quality = 'auto'
+}) {
+  const baseUrl = normalizeApiBaseUrl(apiBaseUrl);
+  const trimmedKey = String(apiKey || '').trim();
+  const trimmedPrompt = String(prompt || '').trim();
+  const selectedImages = Array.from(images || []).filter(Boolean);
+  const hasImages = selectedImages.length > 0;
+  const normalizedFormat = String(outputFormat || 'png').toLowerCase();
+  const normalizedBackground = String(background || 'auto').toLowerCase();
+
+  if (!trimmedKey) {
+    throw new Error('请填写 API 密钥');
+  }
+
+  if (!trimmedPrompt) {
+    throw new Error('请填写提示词');
+  }
+
+  if (normalizedBackground === 'transparent' && normalizedFormat === 'jpeg') {
+    throw new Error('透明背景需要选择 PNG 或 WEBP 格式');
+  }
+
+  const headers = {
+    Authorization: `Bearer ${trimmedKey}`
+  };
+
+  if (hasImages) {
+    const body = new FormData();
+    body.append('model', MODEL);
+    body.append('prompt', trimmedPrompt);
+    appendGenerationParams(body, { size, outputFormat, quantity, background, moderation, quality });
+    selectedImages.forEach((image) => body.append('image', image));
+
+    return {
+      url: `${baseUrl}/v1/images/edits`,
+      options: {
+        method: 'POST',
+        headers,
+        body
+      }
+    };
+  }
+
+  const body = {
+    model: MODEL,
+    prompt: trimmedPrompt
+  };
+  appendGenerationParams(body, { size, outputFormat, quantity, background, moderation, quality });
+
+  return {
+    url: `${baseUrl}/v1/images/generations`,
+    options: {
+      method: 'POST',
+      headers: {
+        ...headers,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    }
+  };
+}
+
+function redactHeaders(headers = {}) {
+  return Object.fromEntries(
+    Object.entries(headers).map(([key, value]) => {
+      if (key.toLowerCase() === 'authorization') {
+        return [key, 'Bearer ***'];
+      }
+
+      return [key, value];
+    })
+  );
+}
+
+function describeRequestForLog({ request, prompt, images = [], params = {} }) {
+  const endpoint = request.targetUrl
+    ? new URL(request.targetUrl).pathname
+    : new URL(request.url, 'http://127.0.0.1').pathname;
+  const bodyType = request.options.body instanceof FormData ? 'FormData' : 'JSON';
+
+  return {
+    url: request.url,
+    targetUrl: request.targetUrl || request.url,
+    endpoint,
+    method: request.options.method,
+    bodyType,
+    model: MODEL,
+    promptLength: String(prompt || '').trim().length,
+    imageCount: Array.from(images || []).length,
+    params,
+    headers: redactHeaders(request.options.headers)
+  };
+}
+
+function diagnosticMessageForError(error) {
+  const message = error?.message || '请求失败';
+  const status = Number(error?.status || 0);
+
+  if (/Failed to fetch/i.test(message)) {
+    return `${message}。浏览器没有拿到可读取的响应，常见原因：CORS 被拦截、网络/DNS 失败、HTTPS 证书异常、服务端提前断开或浏览器插件拦截。`;
+  }
+
+  if (status === 524) {
+    return `${message}。HTTP 524：服务端网关等待上游生成图片超时。请求已经到达 API，不是页面或密钥格式错误；请尝试降低质量、尺寸或数量，缩短提示词，或更换/调整没有短超时限制的 API 地址。`;
+  }
+
+  if (status === 503) {
+    const retryAfter = error?.retryAfter ? `服务端建议等待 ${error.retryAfter} 秒后重试。` : '请稍后在图库中点击“重试”。';
+    return `${message}。HTTP 503：服务端暂时不可用或上游繁忙。请求已经到达 API，不是缓存、密钥格式或页面拼接问题。${retryAfter}`;
+  }
+
+  return message;
+}
+
+function filterTasks(taskList, { status = 'all', query = '', favoriteOnly = false } = {}) {
+  const normalizedQuery = String(query || '').trim().toLowerCase();
+
+  return taskList.filter((task) => {
+    if (favoriteOnly && !task.favorite) {
+      return false;
+    }
+
+    if (status !== 'all' && task.status !== status) {
+      return false;
+    }
+
+    if (!normalizedQuery) {
+      return true;
+    }
+
+    const haystack = [
+      task.prompt,
+      task.status,
+      task.endpoint,
+      task.params?.size,
+      task.params?.outputFormat,
+      task.params?.quantity,
+      task.params?.background,
+      task.params?.moderation,
+      task.params?.quality,
+      task.error
+    ]
+      .filter((value) => value !== undefined && value !== null)
+      .join(' ')
+      .toLowerCase();
+
+    return haystack.includes(normalizedQuery);
+  });
+}
+
+function summarizeTasks(taskList) {
+  return taskList.reduce(
+    (summary, task) => {
+      summary.all += 1;
+      if (task.status in summary) {
+        summary[task.status] += 1;
+      }
+      return summary;
+    },
+    { all: 0, success: 0, error: 0, pending: 0 }
+  );
+}
+
+function tasksForSection(taskList, section) {
+  if (section !== 'gallery') {
+    return [];
+  }
+
+  return Array.from(taskList || []);
+}
+
+function galleryCount(taskList) {
+  return tasksForSection(taskList, 'gallery').length;
+}
+
+function summarizePayloadForLog(payload) {
+  if (!payload || typeof payload !== 'object') {
+    return { type: typeof payload };
+  }
+
+  if (payload.error) {
+    return { error: payload.error };
+  }
+
+  if (Array.isArray(payload.data)) {
+    return {
+      dataCount: payload.data.length,
+      firstItemKeys: payload.data[0] ? Object.keys(payload.data[0]) : []
+    };
+  }
+
+  return {
+    keys: Object.keys(payload)
+  };
+}
+
+function formatLogEntry(entry) {
+  const details = entry.details
+    ? `\n${JSON.stringify(entry.details, null, 2)}`
+    : '';
+
+  return `[${entry.time}] ${entry.level} ${entry.message}${details}`;
+}
+
+function getElements() {
+  return {
+    workspace: document.querySelector('.workspace'),
+    toolbar: document.querySelector('.toolbar'),
+    sectionTabs: document.querySelectorAll('[data-section]'),
+    galleryBadge: document.querySelector('#gallery-badge'),
+    form: document.querySelector('#generator-form'),
+    apiBaseUrl: document.querySelector('#api-base-url'),
+    apiKey: document.querySelector('#api-key'),
+    prompt: document.querySelector('#prompt'),
+    size: document.querySelector('#size'),
+    outputFormat: document.querySelector('#output-format'),
+    quantity: document.querySelector('#quantity'),
+    background: document.querySelector('#background'),
+    moderation: document.querySelector('#moderation'),
+    quality: document.querySelector('#quality'),
+    parameterSelects: document.querySelectorAll('.parameter-bar select'),
+    images: document.querySelector('#images'),
+    attachmentPreview: document.querySelector('#attachment-preview'),
+    submitButton: document.querySelector('#submit-button'),
+    statusSelect: document.querySelector('#status-select'),
+    statusMenuButton: document.querySelector('#status-menu-button'),
+    statusMenuLabel: document.querySelector('#status-menu-label'),
+    statusMenu: document.querySelector('#status-menu'),
+    statusOptions: document.querySelectorAll('[data-status-value]'),
+    statusFilter: document.querySelector('#status-filter'),
+    taskSearch: document.querySelector('#task-search'),
+    favoriteFilterButton: document.querySelector('#favorite-filter-button'),
+    clearFailedButton: document.querySelector('#clear-failed-button'),
+    resultGrid: document.querySelector('#result-grid'),
+    emptyState: document.querySelector('#empty-state'),
+    errorBox: document.querySelector('#error-box'),
+    helpButton: document.querySelector('#help-button'),
+    helpModal: document.querySelector('#help-modal'),
+    closeHelpButton: document.querySelector('#close-help-button'),
+    settingsButton: document.querySelector('#settings-button'),
+    settingsModal: document.querySelector('#settings-modal'),
+    closeSettingsButton: document.querySelector('#close-settings-button'),
+    settingsTabs: document.querySelectorAll('[data-settings-tab]'),
+    settingsPanels: document.querySelectorAll('[data-settings-panel]'),
+    clearAfterSubmit: document.querySelector('#clear-after-submit'),
+    logOutput: document.querySelector('#log-output'),
+    clearLogButton: document.querySelector('#clear-log-button'),
+    copyLogButton: document.querySelector('#copy-log-button')
+  };
+}
+
+function renderLogs(elements) {
+  elements.logOutput.textContent = logEntries.length
+    ? logEntries.map(formatLogEntry).join('\n\n')
+    : '暂无日志。';
+}
+
+function appendLog(elements, level, message, details) {
+  logEntries.push({
+    time: new Date().toLocaleString(),
+    level,
+    message,
+    details
+  });
+
+  renderLogs(elements);
+}
+
+function imageSourceFromItem(item) {
+  if (item.b64_json) {
+    return `data:image/png;base64,${item.b64_json}`;
+  }
+
+  if (item.url) {
+    return item.url;
+  }
+
+  return '';
+}
+
+function imageSourcesFromPayload(payload) {
+  return (Array.isArray(payload?.data) ? payload.data : [])
+    .map((item) => ({
+      src: imageSourceFromItem(item),
+      revisedPrompt: item.revised_prompt || ''
+    }))
+    .filter((item) => item.src);
+}
+
+function normalizeTaskParams(params = {}) {
+  return {
+    ...DEFAULT_GENERATION_PARAMS,
+    ...params,
+    outputFormat: String(params.outputFormat || DEFAULT_GENERATION_PARAMS.outputFormat).toLowerCase(),
+    quantity: normalizeQuantity(params.quantity)
+  };
+}
+
+function normalizeCachedResults(results) {
+  return (Array.isArray(results) ? results : [])
+    .map((result) => ({
+      src: String(result?.src || ''),
+      revisedPrompt: String(result?.revisedPrompt || '')
+    }))
+    .filter((result) => result.src);
+}
+
+function serializeTaskForCache(task) {
+  const createdAt = task?.createdAt instanceof Date
+    ? task.createdAt
+    : new Date(task?.createdAt || Date.now());
+
+  return {
+    id: String(task?.id || `task-${Date.now()}`),
+    prompt: String(task?.prompt || ''),
+    params: normalizeTaskParams(task?.params),
+    endpoint: String(task?.endpoint || ''),
+    imageCount: Number.parseInt(task?.imageCount, 10) || 0,
+    status: ['pending', 'success', 'error'].includes(task?.status) ? task.status : 'error',
+    favorite: Boolean(task?.favorite),
+    createdAt: Number.isNaN(createdAt.getTime()) ? new Date().toISOString() : createdAt.toISOString(),
+    results: normalizeCachedResults(task?.results),
+    error: String(task?.error || '')
+  };
+}
+
+function hydrateTaskFromCache(cachedTask) {
+  if (!cachedTask || typeof cachedTask !== 'object') {
+    return null;
+  }
+
+  const createdAt = new Date(cachedTask.createdAt || Date.now());
+  const status = ['pending', 'success', 'error'].includes(cachedTask.status)
+    ? cachedTask.status
+    : 'error';
+  const restoredStatus = status === 'pending' ? 'error' : status;
+  const results = normalizeCachedResults(cachedTask.results);
+  const missingImageError = restoredStatus === 'success' && results.length === 0;
+
+  return {
+    id: String(cachedTask.id || `task-${Date.now()}`),
+    prompt: String(cachedTask.prompt || ''),
+    params: normalizeTaskParams(cachedTask.params),
+    endpoint: String(cachedTask.endpoint || ''),
+    imageCount: Number.parseInt(cachedTask.imageCount, 10) || 0,
+    status: missingImageError ? 'error' : restoredStatus,
+    favorite: Boolean(cachedTask.favorite),
+    createdAt: Number.isNaN(createdAt.getTime()) ? new Date() : createdAt,
+    results,
+    error: status === 'pending'
+      ? INTERRUPTED_TASK_MESSAGE
+      : (missingImageError ? '缓存记录没有可显示的图片。' : String(cachedTask.error || ''))
+  };
+}
+
+function prepareTasksForCache(taskList) {
+  return Array.from(taskList || [])
+    .map((task) => serializeTaskForCache(task))
+    .slice(0, MAX_CACHED_TASKS);
+}
+
+function applyCachedTasks(cachedTasks) {
+  const restoredTasks = Array.from(cachedTasks || [])
+    .map((task) => hydrateTaskFromCache(task))
+    .filter(Boolean);
+
+  tasks.length = 0;
+  tasks.push(...restoredTasks);
+
+  if (tasks.length > 0) {
+    activeSection = 'gallery';
+  }
+}
+
+function openTaskCacheDb() {
+  if (typeof indexedDB === 'undefined') {
+    return Promise.reject(new Error('当前浏览器环境不支持 IndexedDB'));
+  }
+
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(TASK_CACHE_DB_NAME, 1);
+
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(TASK_CACHE_STORE_NAME)) {
+        db.createObjectStore(TASK_CACHE_STORE_NAME);
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error('打开本地缓存失败'));
+  });
+}
+
+async function readTaskCacheFromIndexedDb() {
+  const db = await openTaskCacheDb();
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(TASK_CACHE_STORE_NAME, 'readonly');
+    const store = transaction.objectStore(TASK_CACHE_STORE_NAME);
+    const request = store.get(TASK_CACHE_KEY);
+
+    request.onsuccess = () => resolve(request.result || null);
+    request.onerror = () => reject(request.error || new Error('读取本地缓存失败'));
+    transaction.oncomplete = () => db.close();
+    transaction.onerror = () => {
+      db.close();
+      reject(transaction.error || new Error('读取本地缓存失败'));
+    };
+  });
+}
+
+async function writeTaskCacheToIndexedDb(payload) {
+  const db = await openTaskCacheDb();
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(TASK_CACHE_STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(TASK_CACHE_STORE_NAME);
+    const request = store.put(payload, TASK_CACHE_KEY);
+
+    request.onerror = () => reject(request.error || new Error('写入本地缓存失败'));
+    transaction.oncomplete = () => {
+      db.close();
+      resolve();
+    };
+    transaction.onerror = () => {
+      db.close();
+      reject(transaction.error || new Error('写入本地缓存失败'));
+    };
+  });
+}
+
+function readTaskCacheFromLocalStorage() {
+  const raw = localStorage.getItem(STORAGE_KEYS.taskCache);
+  return raw ? JSON.parse(raw) : null;
+}
+
+function writeTaskCacheToLocalStorage(payload) {
+  localStorage.setItem(STORAGE_KEYS.taskCache, JSON.stringify(payload));
+}
+
+async function readTaskCachePayload() {
+  try {
+    const indexedDbPayload = await readTaskCacheFromIndexedDb();
+    if (indexedDbPayload) {
+      return indexedDbPayload;
+    }
+  } catch (error) {
+    void error;
+  }
+
+  return readTaskCacheFromLocalStorage();
+}
+
+async function writeTaskCachePayload(payload) {
+  try {
+    await writeTaskCacheToIndexedDb(payload);
+    return;
+  } catch (error) {
+    void error;
+  }
+
+  writeTaskCacheToLocalStorage(payload);
+}
+
+async function loadCachedTasks(elements) {
+  try {
+    const payload = await readTaskCachePayload();
+    const cachedTasks = Array.isArray(payload?.tasks)
+      ? payload.tasks
+      : (Array.isArray(payload) ? payload : []);
+
+    applyCachedTasks(cachedTasks);
+
+    if (tasks.length > 0) {
+      appendLog(elements, 'INFO', '已恢复本地图库缓存', {
+        count: tasks.length,
+        storageVersion: payload?.version || 0
+      });
+    }
+  } catch (error) {
+    appendLog(elements, 'WARN', '读取本地图库缓存失败', {
+      message: error?.message || '未知错误'
+    });
+  }
+}
+
+async function persistTasks(elements) {
+  const payload = {
+    version: TASK_CACHE_VERSION,
+    savedAt: new Date().toISOString(),
+    tasks: prepareTasksForCache(tasks)
+  };
+
+  try {
+    await writeTaskCachePayload(payload);
+  } catch (error) {
+    appendLog(elements, 'WARN', '保存本地图库缓存失败', {
+      message: error?.message || '未知错误'
+    });
+  }
+}
+
+function paramsFromElements(elements) {
+  return {
+    size: elements.size.value,
+    outputFormat: elements.outputFormat.value,
+    quantity: normalizeQuantity(elements.quantity.value),
+    background: elements.background.value,
+    moderation: elements.moderation.value,
+    quality: elements.quality.value
+  };
+}
+
+function taskMatchesCurrentInput(elements) {
+  if (!elements.prompt) {
+    return true;
+  }
+
+  return Boolean(elements.prompt.value.trim());
+}
+
+function setBusy(elements, isBusy) {
+  elements.submitButton.disabled = isBusy || !taskMatchesCurrentInput(elements);
+  elements.submitButton.classList?.toggle('is-loading', isBusy);
+  elements.submitButton.setAttribute?.('aria-busy', String(isBusy));
+
+  if (!elements.submitButton.querySelector) {
+    elements.submitButton.textContent = isBusy ? '...' : '→';
+  }
+
+  if (isBusy && elements.status) {
+    elements.status.textContent = '正在请求 API';
+  }
+}
+
+function createTask({ prompt, params, endpoint, imageCount }) {
+  return {
+    id: `task-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    prompt,
+    params,
+    endpoint,
+    imageCount,
+    status: 'pending',
+    favorite: false,
+    createdAt: new Date(),
+    results: [],
+    error: ''
+  };
+}
+
+function statusLabel(status) {
+  return {
+    pending: '生成中',
+    success: '成功',
+    error: '失败'
+  }[status] || status;
+}
+
+function formatTaskParams(task) {
+  return [
+    task.params.size,
+    task.params.outputFormat.toUpperCase(),
+    `${task.params.quantity} 张`,
+    PARAM_TEXT.background[task.params.background] || task.params.background,
+    PARAM_TEXT.moderation[task.params.moderation] || task.params.moderation,
+    PARAM_TEXT.quality[task.params.quality] || task.params.quality,
+    task.imageCount ? `${task.imageCount} 参考图` : '文生图'
+  ];
+}
+
+function renderTaskCard(task) {
+  const card = document.createElement('article');
+  card.className = `task-card is-${task.status}`;
+  card.dataset.taskId = task.id;
+
+  const head = document.createElement('div');
+  head.className = 'task-card-head';
+  head.innerHTML = `
+    <span class="status-badge">${statusLabel(task.status)}</span>
+    <button class="mini-icon ${task.favorite ? 'is-active' : ''}" type="button" data-action="favorite" aria-label="收藏任务">
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"></path>
+      </svg>
+    </button>
+  `;
+
+  const prompt = document.createElement('p');
+  prompt.className = 'task-prompt';
+  prompt.textContent = task.prompt;
+
+  const params = document.createElement('div');
+  params.className = 'task-params';
+  formatTaskParams(task).forEach((param) => {
+    const chip = document.createElement('span');
+    chip.textContent = param;
+    params.append(chip);
+  });
+
+  const media = document.createElement('div');
+  media.className = 'task-media';
+
+  if (task.status === 'pending') {
+    media.innerHTML = '<div class="loading-tile"></div>';
+  } else if (task.status === 'error') {
+    media.innerHTML = `<div class="error-tile">${task.error || '请求失败'}</div>`;
+  } else {
+    task.results.forEach((result, index) => {
+      const link = document.createElement('a');
+      link.href = result.src;
+      link.download = `vanillaapi-image-${index + 1}.${task.params.outputFormat}`;
+      link.className = 'image-tile';
+      link.innerHTML = `<img src="${result.src}" alt="生成结果 ${index + 1}">`;
+      media.append(link);
+    });
+  }
+
+  const foot = document.createElement('div');
+  foot.className = 'task-card-foot';
+  foot.innerHTML = `
+    <span>${task.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+    ${task.status === 'error' ? '<button type="button" data-action="retry">重试</button>' : ''}
+  `;
+
+  card.append(head, prompt, params, media, foot);
+  return card;
+}
+
+function renderTasks(elements) {
+  const galleryTasks = tasksForSection(tasks, 'gallery');
+  const sectionTasks = tasksForSection(tasks, activeSection);
+  const visibleTasks = activeSection === 'gallery'
+    ? filterTasks(sectionTasks, filters)
+    : sectionTasks;
+  const summary = summarizeTasks(galleryTasks);
+
+  elements.workspace.dataset.section = activeSection;
+  elements.toolbar.hidden = activeSection !== 'gallery';
+  elements.form.hidden = activeSection === 'gallery';
+  elements.galleryBadge.textContent = String(galleryCount(tasks));
+  elements.sectionTabs.forEach((tab) => {
+    const isActive = tab.dataset.section === activeSection;
+    tab.classList.toggle('is-active', isActive);
+    tab.setAttribute('aria-current', isActive ? 'page' : 'false');
+  });
+
+  elements.statusFilter.options[0].textContent = `全部状态 (${summary.all})`;
+  elements.statusFilter.options[1].textContent = `生成中 (${summary.pending})`;
+  elements.statusFilter.options[2].textContent = `成功 (${summary.success})`;
+  elements.statusFilter.options[3].textContent = `失败 (${summary.error})`;
+  syncStatusMenu(elements);
+  elements.clearFailedButton.disabled = summary.error === 0;
+  elements.favoriteFilterButton.classList.toggle('is-active', filters.favoriteOnly);
+  elements.favoriteFilterButton.setAttribute('aria-pressed', String(filters.favoriteOnly));
+
+  elements.resultGrid.innerHTML = '';
+  visibleTasks.forEach((task) => elements.resultGrid.append(renderTaskCard(task)));
+
+  elements.emptyState.hidden = visibleTasks.length > 0;
+  elements.emptyState.querySelector('p').textContent = activeSection === 'gallery'
+    ? (galleryTasks.length ? '没有匹配当前筛选的任务' : '图库暂无任务')
+    : '输入提示词开始生成图片';
+}
+
+function updateEndpointPreview(elements) {
+  void elements;
+}
+
+function syncStatusMenu(elements) {
+  const selectedOption = elements.statusFilter.selectedOptions[0];
+  const selectedValue = elements.statusFilter.value;
+  const selectedText = selectedOption?.textContent || '全部状态';
+
+  elements.statusMenuLabel.textContent = selectedText;
+  elements.statusOptions.forEach((option) => {
+    const isSelected = option.dataset.statusValue === selectedValue;
+    option.classList.toggle('is-selected', isSelected);
+    option.setAttribute('aria-selected', String(isSelected));
+    option.textContent = elements.statusFilter.querySelector(`option[value="${option.dataset.statusValue}"]`)?.textContent || option.textContent;
+  });
+}
+
+function toggleStatusMenu(elements, isOpen) {
+  elements.statusSelect.classList.toggle('is-open', isOpen);
+  elements.statusMenu.hidden = !isOpen;
+  elements.statusMenuButton.setAttribute('aria-expanded', String(isOpen));
+}
+
+function selectStatus(elements, status) {
+  elements.statusFilter.value = status;
+  filters.status = status;
+  toggleStatusMenu(elements, false);
+  renderTasks(elements);
+}
+
+function syncEnhancedSelect(label) {
+  const select = label.querySelector('select');
+  const value = label.querySelector('.select-value');
+  const selected = select.selectedOptions[0];
+
+  if (value) {
+    value.textContent = selected?.textContent || '';
+  }
+
+  label.querySelectorAll('.select-option').forEach((option) => {
+    const isSelected = option.dataset.selectValue === select.value;
+    option.classList.toggle('is-selected', isSelected);
+    option.setAttribute('aria-selected', String(isSelected));
+  });
+}
+
+function closeEnhancedSelect(label) {
+  label.classList.remove('is-open');
+  label.querySelector('.select-menu').hidden = true;
+  label.querySelector('.select-control').setAttribute('aria-expanded', 'false');
+}
+
+function closeAllEnhancedSelects(exceptLabel) {
+  document.querySelectorAll('.parameter-select.is-open').forEach((label) => {
+    if (label !== exceptLabel) {
+      closeEnhancedSelect(label);
+    }
+  });
+}
+
+function createSelectOption(select, label, option) {
+  const item = document.createElement('button');
+  item.className = 'select-option';
+  item.type = 'button';
+  item.role = 'option';
+  item.dataset.selectValue = option.value;
+  item.textContent = option.textContent;
+  item.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    select.value = option.value;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    closeEnhancedSelect(label);
+  });
+  return item;
+}
+
+function enhanceParameterSelects(elements) {
+  elements.parameterSelects.forEach((select) => {
+    if (select.classList.contains('enhanced-native-select')) {
+      return;
+    }
+
+    const label = select.closest('label');
+    label.classList.add('parameter-select');
+    select.classList.add('enhanced-native-select');
+
+    const button = document.createElement('button');
+    button.className = 'select-control';
+    button.type = 'button';
+    button.setAttribute('aria-haspopup', 'listbox');
+    button.setAttribute('aria-expanded', 'false');
+    button.innerHTML = `
+      <span class="select-value"></span>
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <path d="m6 9 6 6 6-6"></path>
+      </svg>
+    `;
+
+    const menu = document.createElement('div');
+    menu.className = 'select-menu';
+    menu.role = 'listbox';
+    menu.hidden = true;
+
+    Array.from(select.children).forEach((child) => {
+      if (child.tagName === 'OPTGROUP') {
+        const group = document.createElement('div');
+        group.className = 'select-group-label';
+        group.textContent = child.label;
+        menu.append(group);
+        Array.from(child.children).forEach((option) => menu.append(createSelectOption(select, label, option)));
+        return;
+      }
+
+      if (child.tagName === 'OPTION') {
+        menu.append(createSelectOption(select, label, child));
+      }
+    });
+
+    button.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const shouldOpen = menu.hidden;
+      closeAllEnhancedSelects(label);
+      label.classList.toggle('is-open', shouldOpen);
+      menu.hidden = !shouldOpen;
+      button.setAttribute('aria-expanded', String(shouldOpen));
+    });
+
+    select.addEventListener('change', () => syncEnhancedSelect(label));
+    select.after(button, menu);
+    syncEnhancedSelect(label);
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!event.target.closest('.parameter-select')) {
+      closeAllEnhancedSelects();
+    }
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeAllEnhancedSelects();
+    }
+  });
+}
+
+function clearAttachmentObjectUrls() {
+  attachmentObjectUrls.forEach((url) => URL.revokeObjectURL(url));
+  attachmentObjectUrls = [];
+}
+
+function removeAttachmentAt(elements, removeIndex) {
+  const files = Array.from(elements.images.files || []);
+
+  if (!files[removeIndex]) {
+    return;
+  }
+
+  const transfer = new DataTransfer();
+  files.forEach((file, index) => {
+    if (index !== removeIndex) {
+      transfer.items.add(file);
+    }
+  });
+  elements.images.files = transfer.files;
+  updateEndpointPreview(elements);
+  renderAttachmentPreview(elements);
+}
+
+function renderAttachmentPreview(elements) {
+  const files = Array.from(elements.images.files || []);
+  clearAttachmentObjectUrls();
+  elements.attachmentPreview.innerHTML = '';
+  elements.attachmentPreview.hidden = files.length === 0;
+
+  files.forEach((file, index) => {
+    const url = URL.createObjectURL(file);
+    attachmentObjectUrls.push(url);
+
+    const item = document.createElement('div');
+    item.className = 'attachment-chip';
+    const image = document.createElement('img');
+    image.src = url;
+    image.alt = '';
+    const name = document.createElement('span');
+    name.textContent = file.name;
+    const remove = document.createElement('button');
+    remove.className = 'attachment-remove';
+    remove.type = 'button';
+    remove.dataset.attachmentRemove = String(index);
+    remove.setAttribute('aria-label', `移除参考图 ${file.name}`);
+    remove.innerHTML = `
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    `;
+    item.append(image, name, remove);
+    elements.attachmentPreview.append(item);
+  });
+}
+
+function clearTransientError(elements) {
+  window.clearTimeout(errorTimer);
+  elements.errorBox.hidden = true;
+  elements.errorBox.textContent = '';
+}
+
+function showError(elements, message) {
+  window.clearTimeout(errorTimer);
+  elements.errorBox.textContent = message;
+  elements.errorBox.hidden = false;
+  errorTimer = window.setTimeout(() => clearTransientError(elements), 5200);
+}
+
+function loadSettings(elements) {
+  elements.apiBaseUrl.value = localStorage.getItem(STORAGE_KEYS.apiBaseUrl) || DEFAULT_API_BASE_URL;
+  elements.apiKey.value = localStorage.getItem(STORAGE_KEYS.apiKey) || '';
+  elements.clearAfterSubmit.checked = localStorage.getItem(STORAGE_KEYS.clearAfterSubmit) === 'true';
+}
+
+function saveSettings(elements) {
+  localStorage.setItem(STORAGE_KEYS.apiBaseUrl, elements.apiBaseUrl.value || DEFAULT_API_BASE_URL);
+  localStorage.setItem(STORAGE_KEYS.apiKey, elements.apiKey.value || '');
+  localStorage.setItem(STORAGE_KEYS.clearAfterSubmit, String(elements.clearAfterSubmit.checked));
+}
+
+function toggleModal(modal, isOpen) {
+  modal.hidden = !isOpen;
+}
+
+function activateSettingsTab(elements, tabName) {
+  elements.settingsTabs.forEach((tab) => {
+    tab.classList.toggle('active', tab.dataset.settingsTab === tabName);
+  });
+  elements.settingsPanels.forEach((panel) => {
+    panel.classList.toggle('active', panel.dataset.settingsPanel === tabName);
+  });
+}
+
+function clearComposer(elements) {
+  elements.prompt.value = '';
+  elements.images.value = '';
+  updateEndpointPreview(elements);
+  renderAttachmentPreview(elements);
+  refreshSubmitState(elements);
+}
+
+function refreshSubmitState(elements) {
+  elements.submitButton.disabled = !taskMatchesCurrentInput(elements);
+}
+
+function activateSection(elements, section) {
+  activeSection = section === 'gallery' ? 'gallery' : 'workbench';
+  renderTasks(elements);
+}
+
+async function executeTask(elements, task) {
+  renderTasks(elements);
+  setBusy(elements, true);
+  await persistTasks(elements);
+
+  try {
+    const request = buildImageRequest({
+      apiBaseUrl: elements.apiBaseUrl.value,
+      apiKey: elements.apiKey.value,
+      prompt: task.prompt,
+      images: elements.images.files,
+      ...task.params
+    });
+
+    appendLog(elements, 'INFO', '开始请求图片接口', describeRequestForLog({
+      request,
+      prompt: task.prompt,
+      images: elements.images.files,
+      params: task.params
+    }));
+
+    const response = await fetch(request.url, request.options);
+    appendLog(elements, 'INFO', '收到 HTTP 响应', {
+      status: response.status,
+      ok: response.ok,
+      contentType: response.headers.get('content-type') || '',
+      retryAfter: response.headers.get('retry-after') || ''
+    });
+
+    const payload = await response.json().catch((error) => {
+      appendLog(elements, 'WARN', '响应不是可解析的 JSON', {
+        message: error.message
+      });
+      return {};
+    });
+
+    if (!response.ok) {
+      const message = payload?.error?.message || payload?.message || `HTTP ${response.status}`;
+      appendLog(elements, 'ERROR', '接口返回错误', {
+        status: response.status,
+        payload: summarizePayloadForLog(payload)
+      });
+      const error = new Error(message);
+      error.status = response.status;
+      error.payload = payload;
+      error.retryAfter = response.headers.get('retry-after') || '';
+      throw error;
+    }
+
+    task.results = imageSourcesFromPayload(payload);
+    task.status = task.results.length > 0 ? 'success' : 'error';
+    task.error = task.results.length > 0 ? '' : '接口没有返回图片';
+    appendLog(elements, 'INFO', '请求成功', summarizePayloadForLog(payload));
+  } catch (error) {
+    const message = diagnosticMessageForError(error);
+    task.status = 'error';
+    task.error = message;
+    appendLog(elements, 'ERROR', '请求失败', {
+      name: error?.name || 'Error',
+      status: error?.status || null,
+      message
+    });
+    showError(elements, message);
+  } finally {
+    setBusy(elements, false);
+    await persistTasks(elements);
+    renderTasks(elements);
+  }
+}
+
+async function submitGeneration(elements) {
+  clearTransientError(elements);
+
+  let requestPreview;
+  const params = paramsFromElements(elements);
+  const prompt = elements.prompt.value.trim();
+  const imageCount = elements.images.files.length;
+
+  try {
+    requestPreview = buildImageRequest({
+      apiBaseUrl: elements.apiBaseUrl.value,
+      apiKey: elements.apiKey.value,
+      prompt,
+      images: elements.images.files,
+      ...params
+    });
+  } catch (error) {
+    const message = error.message || '请求配置不完整';
+    showError(elements, message);
+
+    if (/API 密钥|API 地址/.test(message)) {
+      activateSettingsTab(elements, 'api');
+      toggleModal(elements.settingsModal, true);
+      window.requestAnimationFrame(() => {
+        (/API 密钥/.test(message) ? elements.apiKey : elements.apiBaseUrl).focus();
+      });
+    }
+
+    return;
+  }
+
+  const task = createTask({
+    prompt,
+    params,
+    endpoint: new URL(requestPreview.url).pathname,
+    imageCount
+  });
+  tasks.unshift(task);
+  activeSection = 'gallery';
+
+  if (elements.clearAfterSubmit.checked) {
+    clearComposer(elements);
+  }
+
+  await executeTask(elements, task);
+}
+
+function retryTask(elements, taskId) {
+  const task = tasks.find((item) => item.id === taskId);
+
+  if (!task) {
+    return;
+  }
+
+  task.status = 'pending';
+  task.error = '';
+  task.results = [];
+  void executeTask(elements, task);
+}
+
+function bindEvents(elements) {
+  elements.prompt.addEventListener('input', () => {
+    elements.prompt.style.height = 'auto';
+    const nextHeight = Math.min(elements.prompt.scrollHeight, 144);
+    elements.prompt.style.height = `${nextHeight}px`;
+    elements.prompt.style.overflowY = elements.prompt.scrollHeight > nextHeight ? 'auto' : 'hidden';
+    refreshSubmitState(elements);
+  });
+  elements.prompt.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      event.preventDefault();
+      if (!elements.submitButton.disabled) {
+        elements.form.requestSubmit();
+      }
+    }
+  });
+
+  elements.form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    submitGeneration(elements);
+  });
+
+  elements.sectionTabs.forEach((tab) => {
+    tab.addEventListener('click', () => activateSection(elements, tab.dataset.section));
+  });
+
+  elements.images.addEventListener('change', () => {
+    updateEndpointPreview(elements);
+    renderAttachmentPreview(elements);
+  });
+  elements.attachmentPreview.addEventListener('click', (event) => {
+    const removeButton = event.target.closest('[data-attachment-remove]');
+    if (!removeButton) {
+      return;
+    }
+
+    removeAttachmentAt(elements, Number(removeButton.dataset.attachmentRemove));
+  });
+
+  elements.statusFilter.addEventListener('change', () => {
+    filters.status = elements.statusFilter.value;
+    renderTasks(elements);
+  });
+  elements.statusMenuButton.addEventListener('click', () => {
+    toggleStatusMenu(elements, elements.statusMenu.hidden);
+  });
+  elements.statusOptions.forEach((option) => {
+    option.addEventListener('click', () => selectStatus(elements, option.dataset.statusValue));
+  });
+  document.addEventListener('click', (event) => {
+    if (!elements.statusSelect.contains(event.target)) {
+      toggleStatusMenu(elements, false);
+    }
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      toggleStatusMenu(elements, false);
+    }
+  });
+  elements.taskSearch.addEventListener('input', () => {
+    filters.query = elements.taskSearch.value;
+    renderTasks(elements);
+  });
+  elements.favoriteFilterButton.addEventListener('click', () => {
+    filters.favoriteOnly = !filters.favoriteOnly;
+    renderTasks(elements);
+  });
+  elements.clearFailedButton.addEventListener('click', () => {
+    for (let index = tasks.length - 1; index >= 0; index -= 1) {
+      if (tasks[index].status === 'error') {
+        tasks.splice(index, 1);
+      }
+    }
+    clearTransientError(elements);
+    void persistTasks(elements);
+    renderTasks(elements);
+  });
+
+  elements.resultGrid.addEventListener('click', (event) => {
+    const actionButton = event.target.closest('[data-action]');
+    if (!actionButton) {
+      return;
+    }
+
+    const taskId = actionButton.closest('[data-task-id]')?.dataset.taskId;
+    const task = tasks.find((item) => item.id === taskId);
+
+    if (!task) {
+      return;
+    }
+
+    if (actionButton.dataset.action === 'favorite') {
+      task.favorite = !task.favorite;
+      void persistTasks(elements);
+      renderTasks(elements);
+    }
+
+    if (actionButton.dataset.action === 'retry') {
+      retryTask(elements, taskId);
+    }
+  });
+
+  elements.helpButton.addEventListener('click', () => toggleModal(elements.helpModal, true));
+  elements.closeHelpButton.addEventListener('click', () => toggleModal(elements.helpModal, false));
+  elements.settingsButton.addEventListener('click', () => toggleModal(elements.settingsModal, true));
+  elements.closeSettingsButton.addEventListener('click', () => toggleModal(elements.settingsModal, false));
+
+  [elements.helpModal, elements.settingsModal].forEach((modal) => {
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) {
+        toggleModal(modal, false);
+      }
+    });
+  });
+
+  elements.settingsTabs.forEach((tab) => {
+    tab.addEventListener('click', () => activateSettingsTab(elements, tab.dataset.settingsTab));
+  });
+
+  elements.apiBaseUrl.addEventListener('input', () => saveSettings(elements));
+  elements.apiKey.addEventListener('input', () => saveSettings(elements));
+  elements.clearAfterSubmit.addEventListener('change', () => saveSettings(elements));
+
+  elements.clearLogButton.addEventListener('click', () => {
+    logEntries.length = 0;
+    renderLogs(elements);
+  });
+  elements.copyLogButton.addEventListener('click', async () => {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(elements.logOutput.textContent);
+      appendLog(elements, 'INFO', '日志已复制到剪贴板');
+    } else {
+      appendLog(elements, 'WARN', '当前浏览器环境不支持直接复制日志，请手动选择复制');
+    }
+  });
+}
+
+async function boot() {
+  const elements = getElements();
+
+  if (!elements.form) {
+    return;
+  }
+
+  loadSettings(elements);
+  enhanceParameterSelects(elements);
+  renderLogs(elements);
+  await loadCachedTasks(elements);
+  updateEndpointPreview(elements);
+  renderAttachmentPreview(elements);
+  renderTasks(elements);
+  refreshSubmitState(elements);
+  bindEvents(elements);
+}
+
+if (typeof document !== 'undefined') {
+  boot();
+}
+
+    </script>
+  </body>
+</html>
+
