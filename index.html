@@ -512,11 +512,14 @@ svg {
   padding: 14px;
   background: rgba(255, 255, 255, 0.92);
   box-shadow: 0 10px 32px rgba(31, 35, 45, 0.06);
-  animation: card-in 260ms var(--ease) both;
   transition:
     transform 180ms var(--ease),
     box-shadow 180ms var(--ease),
     border-color 180ms var(--ease);
+}
+
+.task-card.is-entering {
+  animation: card-in 260ms var(--ease) both;
 }
 
 .task-card:hover {
@@ -1748,7 +1751,7 @@ kbd {
           </ul>
           <h3>设置与日志</h3>
           <ul>
-            <li>设置中填写 API 地址和密钥，模型固定为 gpt-image-2。</li>
+            <li>设置中填写 API 地址、密钥和模型 ID，模型默认使用 gpt-image-2。</li>
             <li>请求日志会记录接口、状态和错误信息，便于排查问题。</li>
             <li><kbd>Ctrl</kbd> + <kbd>Enter</kbd> 可快速提交当前提示词。</li>
           </ul>
@@ -1817,8 +1820,8 @@ kbd {
               </label>
               <label>
                 <span>模型 ID</span>
-                <input type="text" value="gpt-image-2" disabled>
-                <small>模型固定为 gpt-image-2。</small>
+                <input id="api-model" type="text" value="gpt-image-2" autocomplete="off">
+                <small>默认使用 gpt-image-2，也可以填写 API 服务支持的其他模型。</small>
               </label>
               <label>
                 <span>请求超时（秒）</span>
@@ -1843,12 +1846,13 @@ kbd {
       </section>
     </div>
     <script>
-const MODEL = 'gpt-image-2';
+const DEFAULT_MODEL = 'gpt-image-2';
 const DEFAULT_API_BASE_URL = 'https://api.lorikein.cn';
 
 const STORAGE_KEYS = {
   apiBaseUrl: 'vanillaapi-image.apiBaseUrl',
   apiKey: 'vanillaapi-image.apiKey',
+  model: 'vanillaapi-image.model',
   clearAfterSubmit: 'vanillaapi-image.clearAfterSubmit',
   taskCache: 'vanillaapi-image.taskCache'
 };
@@ -1861,6 +1865,9 @@ const INTERRUPTED_TASK_MESSAGE = '页面刷新后该生成任务已中断，请�
 
 const logEntries = [];
 const tasks = [];
+const taskCardNodes = new Map();
+const taskCardStates = new WeakMap();
+const taskIdsPendingEntryAnimation = new Set();
 const filters = {
   status: 'all',
   query: '',
@@ -1960,6 +1967,7 @@ function appendGenerationParams(
 function buildImageRequest({
   apiBaseUrl = DEFAULT_API_BASE_URL,
   apiKey,
+  model = DEFAULT_MODEL,
   prompt,
   images = [],
   size = 'auto',
@@ -1971,6 +1979,7 @@ function buildImageRequest({
 }) {
   const baseUrl = normalizeApiBaseUrl(apiBaseUrl);
   const trimmedKey = String(apiKey || '').trim();
+  const normalizedModel = String(model || DEFAULT_MODEL).trim() || DEFAULT_MODEL;
   const trimmedPrompt = String(prompt || '').trim();
   const selectedImages = Array.from(images || []).filter(Boolean);
   const hasImages = selectedImages.length > 0;
@@ -1995,7 +2004,7 @@ function buildImageRequest({
 
   if (hasImages) {
     const body = new FormData();
-    body.append('model', MODEL);
+    body.append('model', normalizedModel);
     body.append('prompt', trimmedPrompt);
     appendGenerationParams(body, { size, outputFormat, quantity, background, moderation, quality });
     selectedImages.forEach((image) => body.append('image', image));
@@ -2011,7 +2020,7 @@ function buildImageRequest({
   }
 
   const body = {
-    model: MODEL,
+    model: normalizedModel,
     prompt: trimmedPrompt
   };
   appendGenerationParams(body, { size, outputFormat, quantity, background, moderation, quality });
@@ -2041,7 +2050,7 @@ function redactHeaders(headers = {}) {
   );
 }
 
-function describeRequestForLog({ request, prompt, images = [], params = {} }) {
+function describeRequestForLog({ request, model = DEFAULT_MODEL, prompt, images = [], params = {} }) {
   const endpoint = request.targetUrl
     ? new URL(request.targetUrl).pathname
     : new URL(request.url, 'http://127.0.0.1').pathname;
@@ -2053,7 +2062,7 @@ function describeRequestForLog({ request, prompt, images = [], params = {} }) {
     endpoint,
     method: request.options.method,
     bodyType,
-    model: MODEL,
+    model: String(model || DEFAULT_MODEL).trim() || DEFAULT_MODEL,
     promptLength: String(prompt || '').trim().length,
     imageCount: Array.from(images || []).length,
     params,
@@ -2180,6 +2189,7 @@ function getElements() {
     form: document.querySelector('#generator-form'),
     apiBaseUrl: document.querySelector('#api-base-url'),
     apiKey: document.querySelector('#api-key'),
+    apiModel: document.querySelector('#api-model'),
     prompt: document.querySelector('#prompt'),
     size: document.querySelector('#size'),
     outputFormat: document.querySelector('#output-format'),
@@ -2537,16 +2547,96 @@ function formatTaskParams(task) {
   ];
 }
 
-function renderTaskCard(task) {
+function updateTaskCard(card, task) {
+  const previousState = taskCardStates.get(card) || {};
+  const resultSources = task.results.map((result) => result.src);
+  const paramsSignature = JSON.stringify(formatTaskParams(task));
+  const mediaChanged = previousState.status !== task.status
+    || previousState.error !== task.error
+    || previousState.outputFormat !== task.params.outputFormat
+    || !Array.isArray(previousState.resultSources)
+    || previousState.resultSources.length !== resultSources.length
+    || previousState.resultSources.some((src, index) => src !== resultSources[index]);
+
+  card.classList.remove('is-pending', 'is-success', 'is-error');
+  card.classList.add(`is-${task.status}`);
+  card.querySelector('.status-badge').textContent = statusLabel(task.status);
+  card.querySelector('[data-action="favorite"]').classList.toggle('is-active', task.favorite);
+  card.querySelector('.task-prompt').textContent = task.prompt;
+
+  if (previousState.paramsSignature !== paramsSignature) {
+    const params = card.querySelector('.task-params');
+    const chips = formatTaskParams(task).map((param) => {
+      const chip = document.createElement('span');
+      chip.textContent = param;
+      return chip;
+    });
+    params.replaceChildren(...chips);
+  }
+
+  if (mediaChanged) {
+    const media = card.querySelector('.task-media');
+
+    if (task.status === 'pending') {
+      media.innerHTML = '<div class="loading-tile"></div>';
+    } else if (task.status === 'error') {
+      const errorTile = document.createElement('div');
+      errorTile.className = 'error-tile';
+      errorTile.textContent = task.error || '请求失败';
+      media.replaceChildren(errorTile);
+    } else {
+      const images = task.results.map((result, index) => {
+        const link = document.createElement('a');
+        const image = document.createElement('img');
+        link.href = result.src;
+        link.download = `vanillaapi-image-${index + 1}.${task.params.outputFormat}`;
+        link.className = 'image-tile';
+        image.src = result.src;
+        image.alt = `生成结果 ${index + 1}`;
+        link.append(image);
+        return link;
+      });
+      media.replaceChildren(...images);
+    }
+  }
+
+  if (previousState.status !== task.status || previousState.createdAt !== task.createdAt) {
+    const foot = card.querySelector('.task-card-foot');
+    const time = document.createElement('span');
+    time.textContent = task.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    foot.replaceChildren(time);
+
+    if (task.status === 'error') {
+      const retryButton = document.createElement('button');
+      retryButton.type = 'button';
+      retryButton.dataset.action = 'retry';
+      retryButton.textContent = '重试';
+      foot.append(retryButton);
+    }
+  }
+
+  taskCardStates.set(card, {
+    status: task.status,
+    favorite: task.favorite,
+    prompt: task.prompt,
+    error: task.error,
+    outputFormat: task.params.outputFormat,
+    paramsSignature,
+    resultSources,
+    createdAt: task.createdAt
+  });
+}
+
+function renderTaskCard(task, animate = false) {
   const card = document.createElement('article');
-  card.className = `task-card is-${task.status}`;
+  card.className = `task-card${animate ? ' is-entering' : ''}`;
   card.dataset.taskId = task.id;
 
   const head = document.createElement('div');
   head.className = 'task-card-head';
   head.innerHTML = `
-    <span class="status-badge">${statusLabel(task.status)}</span>
-    <button class="mini-icon ${task.favorite ? 'is-active' : ''}" type="button" data-action="favorite" aria-label="收藏任务">
+    <span class="status-badge"></span>
+    <button class="mini-icon" type="button" data-action="favorite" aria-label="收藏任务">
       <svg aria-hidden="true" viewBox="0 0 24 24">
         <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"></path>
       </svg>
@@ -2555,42 +2645,23 @@ function renderTaskCard(task) {
 
   const prompt = document.createElement('p');
   prompt.className = 'task-prompt';
-  prompt.textContent = task.prompt;
 
   const params = document.createElement('div');
   params.className = 'task-params';
-  formatTaskParams(task).forEach((param) => {
-    const chip = document.createElement('span');
-    chip.textContent = param;
-    params.append(chip);
-  });
 
   const media = document.createElement('div');
   media.className = 'task-media';
 
-  if (task.status === 'pending') {
-    media.innerHTML = '<div class="loading-tile"></div>';
-  } else if (task.status === 'error') {
-    media.innerHTML = `<div class="error-tile">${task.error || '请求失败'}</div>`;
-  } else {
-    task.results.forEach((result, index) => {
-      const link = document.createElement('a');
-      link.href = result.src;
-      link.download = `vanillaapi-image-${index + 1}.${task.params.outputFormat}`;
-      link.className = 'image-tile';
-      link.innerHTML = `<img src="${result.src}" alt="生成结果 ${index + 1}">`;
-      media.append(link);
-    });
-  }
-
   const foot = document.createElement('div');
   foot.className = 'task-card-foot';
-  foot.innerHTML = `
-    <span>${task.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-    ${task.status === 'error' ? '<button type="button" data-action="retry">重试</button>' : ''}
-  `;
 
   card.append(head, prompt, params, media, foot);
+  updateTaskCard(card, task);
+  card.addEventListener('animationend', (event) => {
+    if (event.target === card && event.animationName === 'card-in') {
+      card.classList.remove('is-entering');
+    }
+  });
   return card;
 }
 
@@ -2621,8 +2692,27 @@ function renderTasks(elements) {
   elements.favoriteFilterButton.classList.toggle('is-active', filters.favoriteOnly);
   elements.favoriteFilterButton.setAttribute('aria-pressed', String(filters.favoriteOnly));
 
-  elements.resultGrid.innerHTML = '';
-  visibleTasks.forEach((task) => elements.resultGrid.append(renderTaskCard(task)));
+  const currentTaskIds = new Set(tasks.map((task) => task.id));
+  taskCardNodes.forEach((card, taskId) => {
+    if (!currentTaskIds.has(taskId)) {
+      taskCardNodes.delete(taskId);
+      taskIdsPendingEntryAnimation.delete(taskId);
+    }
+  });
+
+  const visibleCards = visibleTasks.map((task) => {
+    let card = taskCardNodes.get(task.id);
+
+    if (!card) {
+      card = renderTaskCard(task, taskIdsPendingEntryAnimation.delete(task.id));
+      taskCardNodes.set(task.id, card);
+    } else {
+      updateTaskCard(card, task);
+    }
+
+    return card;
+  });
+  elements.resultGrid.replaceChildren(...visibleCards);
 
   elements.emptyState.hidden = visibleTasks.length > 0;
   elements.emptyState.querySelector('p').textContent = activeSection === 'gallery'
@@ -2849,12 +2939,14 @@ function showError(elements, message) {
 function loadSettings(elements) {
   elements.apiBaseUrl.value = localStorage.getItem(STORAGE_KEYS.apiBaseUrl) || DEFAULT_API_BASE_URL;
   elements.apiKey.value = localStorage.getItem(STORAGE_KEYS.apiKey) || '';
+  elements.apiModel.value = localStorage.getItem(STORAGE_KEYS.model) || DEFAULT_MODEL;
   elements.clearAfterSubmit.checked = localStorage.getItem(STORAGE_KEYS.clearAfterSubmit) === 'true';
 }
 
 function saveSettings(elements) {
   localStorage.setItem(STORAGE_KEYS.apiBaseUrl, elements.apiBaseUrl.value || DEFAULT_API_BASE_URL);
   localStorage.setItem(STORAGE_KEYS.apiKey, elements.apiKey.value || '');
+  localStorage.setItem(STORAGE_KEYS.model, elements.apiModel.value.trim() || DEFAULT_MODEL);
   localStorage.setItem(STORAGE_KEYS.clearAfterSubmit, String(elements.clearAfterSubmit.checked));
 }
 
@@ -2897,6 +2989,7 @@ async function executeTask(elements, task) {
     const request = buildImageRequest({
       apiBaseUrl: elements.apiBaseUrl.value,
       apiKey: elements.apiKey.value,
+      model: elements.apiModel.value,
       prompt: task.prompt,
       images: elements.images.files,
       ...task.params
@@ -2904,6 +2997,7 @@ async function executeTask(elements, task) {
 
     appendLog(elements, 'INFO', '开始请求图片接口', describeRequestForLog({
       request,
+      model: elements.apiModel.value,
       prompt: task.prompt,
       images: elements.images.files,
       params: task.params
@@ -2970,6 +3064,7 @@ async function submitGeneration(elements) {
     requestPreview = buildImageRequest({
       apiBaseUrl: elements.apiBaseUrl.value,
       apiKey: elements.apiKey.value,
+      model: elements.apiModel.value,
       prompt,
       images: elements.images.files,
       ...params
@@ -2996,6 +3091,7 @@ async function submitGeneration(elements) {
     imageCount
   });
   tasks.unshift(task);
+  taskIdsPendingEntryAnimation.add(task.id);
   activeSection = 'gallery';
 
   if (elements.clearAfterSubmit.checked) {
@@ -3139,6 +3235,7 @@ function bindEvents(elements) {
 
   elements.apiBaseUrl.addEventListener('input', () => saveSettings(elements));
   elements.apiKey.addEventListener('input', () => saveSettings(elements));
+  elements.apiModel.addEventListener('input', () => saveSettings(elements));
   elements.clearAfterSubmit.addEventListener('change', () => saveSettings(elements));
 
   elements.clearLogButton.addEventListener('click', () => {
