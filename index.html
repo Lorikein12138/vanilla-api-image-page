@@ -1825,7 +1825,7 @@ kbd {
               </label>
               <label>
                 <span>请求超时（秒）</span>
-                <input type="number" value="600" min="1">
+                <input id="api-timeout-seconds" type="number" value="600" min="1">
               </label>
             </section>
 
@@ -1848,11 +1848,13 @@ kbd {
     <script>
 const DEFAULT_MODEL = 'gpt-image-2';
 const DEFAULT_API_BASE_URL = 'https://api.lorikein.cn';
+const DEFAULT_REQUEST_TIMEOUT_SECONDS = 600;
 
 const STORAGE_KEYS = {
   apiBaseUrl: 'vanillaapi-image.apiBaseUrl',
   apiKey: 'vanillaapi-image.apiKey',
   model: 'vanillaapi-image.model',
+  timeoutSeconds: 'vanillaapi-image.timeoutSeconds',
   clearAfterSubmit: 'vanillaapi-image.clearAfterSubmit',
   taskCache: 'vanillaapi-image.taskCache'
 };
@@ -1895,6 +1897,11 @@ function normalizeQuantity(quantity) {
   }
 
   return Math.min(Math.max(parsed, 1), 10);
+}
+
+function normalizeTimeoutSeconds(timeoutSeconds) {
+  const parsed = Number.parseInt(timeoutSeconds, 10);
+  return Number.isNaN(parsed) || parsed < 1 ? DEFAULT_REQUEST_TIMEOUT_SECONDS : parsed;
 }
 
 const PARAM_TEXT = {
@@ -2051,14 +2058,11 @@ function redactHeaders(headers = {}) {
 }
 
 function describeRequestForLog({ request, model = DEFAULT_MODEL, prompt, images = [], params = {} }) {
-  const endpoint = request.targetUrl
-    ? new URL(request.targetUrl).pathname
-    : new URL(request.url, 'http://127.0.0.1').pathname;
+  const endpoint = new URL(request.url, 'http://127.0.0.1').pathname;
   const bodyType = request.options.body instanceof FormData ? 'FormData' : 'JSON';
 
   return {
     url: request.url,
-    targetUrl: request.targetUrl || request.url,
     endpoint,
     method: request.options.method,
     bodyType,
@@ -2139,18 +2143,6 @@ function summarizeTasks(taskList) {
   );
 }
 
-function tasksForSection(taskList, section) {
-  if (section !== 'gallery') {
-    return [];
-  }
-
-  return Array.from(taskList || []);
-}
-
-function galleryCount(taskList) {
-  return tasksForSection(taskList, 'gallery').length;
-}
-
 function summarizePayloadForLog(payload) {
   if (!payload || typeof payload !== 'object') {
     return { type: typeof payload };
@@ -2190,6 +2182,7 @@ function getElements() {
     apiBaseUrl: document.querySelector('#api-base-url'),
     apiKey: document.querySelector('#api-key'),
     apiModel: document.querySelector('#api-model'),
+    timeoutSeconds: document.querySelector('#api-timeout-seconds'),
     prompt: document.querySelector('#prompt'),
     size: document.querySelector('#size'),
     outputFormat: document.querySelector('#output-format'),
@@ -2245,9 +2238,18 @@ function appendLog(elements, level, message, details) {
   renderLogs(elements);
 }
 
-function imageSourceFromItem(item) {
+function mimeTypeForOutputFormat(outputFormat) {
+  return {
+    jpeg: 'image/jpeg',
+    jpg: 'image/jpeg',
+    png: 'image/png',
+    webp: 'image/webp'
+  }[String(outputFormat || '').toLowerCase()] || 'image/png';
+}
+
+function imageSourceFromItem(item, outputFormat) {
   if (item.b64_json) {
-    return `data:image/png;base64,${item.b64_json}`;
+    return `data:${mimeTypeForOutputFormat(outputFormat)};base64,${item.b64_json}`;
   }
 
   if (item.url) {
@@ -2257,10 +2259,10 @@ function imageSourceFromItem(item) {
   return '';
 }
 
-function imageSourcesFromPayload(payload) {
+function imageSourcesFromPayload(payload, outputFormat) {
   return (Array.isArray(payload?.data) ? payload.data : [])
     .map((item) => ({
-      src: imageSourceFromItem(item),
+      src: imageSourceFromItem(item, outputFormat),
       revisedPrompt: item.revised_prompt || ''
     }))
     .filter((item) => item.src);
@@ -2298,6 +2300,7 @@ function serializeTaskForCache(task) {
     status: ['pending', 'success', 'error'].includes(task?.status) ? task.status : 'error',
     favorite: Boolean(task?.favorite),
     createdAt: Number.isNaN(createdAt.getTime()) ? new Date().toISOString() : createdAt.toISOString(),
+    referenceImages: Array.from(task?.referenceImages || []),
     results: normalizeCachedResults(task?.results),
     error: String(task?.error || '')
   };
@@ -2325,6 +2328,7 @@ function hydrateTaskFromCache(cachedTask) {
     status: missingImageError ? 'error' : restoredStatus,
     favorite: Boolean(cachedTask.favorite),
     createdAt: Number.isNaN(createdAt.getTime()) ? new Date() : createdAt,
+    referenceImages: Array.from(cachedTask.referenceImages || []).filter((image) => image instanceof Blob),
     results,
     error: status === 'pending'
       ? INTERRUPTED_TASK_MESSAGE
@@ -2503,22 +2507,18 @@ function setBusy(elements, isBusy) {
   elements.submitButton.classList?.toggle('is-loading', isBusy);
   elements.submitButton.setAttribute?.('aria-busy', String(isBusy));
 
-  if (!elements.submitButton.querySelector) {
-    elements.submitButton.textContent = isBusy ? '...' : '→';
-  }
-
-  if (isBusy && elements.status) {
-    elements.status.textContent = '正在请求 API';
-  }
 }
 
-function createTask({ prompt, params, endpoint, imageCount }) {
+function createTask({ prompt, params, endpoint, referenceImages = [] }) {
+  const taskReferenceImages = Array.from(referenceImages || []);
+
   return {
     id: `task-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     prompt,
     params,
     endpoint,
-    imageCount,
+    imageCount: taskReferenceImages.length,
+    referenceImages: taskReferenceImages,
     status: 'pending',
     favorite: false,
     createdAt: new Date(),
@@ -2666,8 +2666,8 @@ function renderTaskCard(task, animate = false) {
 }
 
 function renderTasks(elements) {
-  const galleryTasks = tasksForSection(tasks, 'gallery');
-  const sectionTasks = tasksForSection(tasks, activeSection);
+  const galleryTasks = tasks;
+  const sectionTasks = activeSection === 'gallery' ? tasks : [];
   const visibleTasks = activeSection === 'gallery'
     ? filterTasks(sectionTasks, filters)
     : sectionTasks;
@@ -2676,7 +2676,7 @@ function renderTasks(elements) {
   elements.workspace.dataset.section = activeSection;
   elements.toolbar.hidden = activeSection !== 'gallery';
   elements.form.hidden = activeSection === 'gallery';
-  elements.galleryBadge.textContent = String(galleryCount(tasks));
+  elements.galleryBadge.textContent = String(tasks.length);
   elements.sectionTabs.forEach((tab) => {
     const isActive = tab.dataset.section === activeSection;
     tab.classList.toggle('is-active', isActive);
@@ -2718,10 +2718,6 @@ function renderTasks(elements) {
   elements.emptyState.querySelector('p').textContent = activeSection === 'gallery'
     ? (galleryTasks.length ? '没有匹配当前筛选的任务' : '图库暂无任务')
     : '输入提示词开始生成图片';
-}
-
-function updateEndpointPreview(elements) {
-  void elements;
 }
 
 function syncStatusMenu(elements) {
@@ -2886,14 +2882,13 @@ function removeAttachmentAt(elements, removeIndex) {
     }
   });
   elements.images.files = transfer.files;
-  updateEndpointPreview(elements);
   renderAttachmentPreview(elements);
 }
 
 function renderAttachmentPreview(elements) {
   const files = Array.from(elements.images.files || []);
   clearAttachmentObjectUrls();
-  elements.attachmentPreview.innerHTML = '';
+  elements.attachmentPreview.replaceChildren();
   elements.attachmentPreview.hidden = files.length === 0;
 
   files.forEach((file, index) => {
@@ -2940,6 +2935,7 @@ function loadSettings(elements) {
   elements.apiBaseUrl.value = localStorage.getItem(STORAGE_KEYS.apiBaseUrl) || DEFAULT_API_BASE_URL;
   elements.apiKey.value = localStorage.getItem(STORAGE_KEYS.apiKey) || '';
   elements.apiModel.value = localStorage.getItem(STORAGE_KEYS.model) || DEFAULT_MODEL;
+  elements.timeoutSeconds.value = String(normalizeTimeoutSeconds(localStorage.getItem(STORAGE_KEYS.timeoutSeconds)));
   elements.clearAfterSubmit.checked = localStorage.getItem(STORAGE_KEYS.clearAfterSubmit) === 'true';
 }
 
@@ -2947,6 +2943,7 @@ function saveSettings(elements) {
   localStorage.setItem(STORAGE_KEYS.apiBaseUrl, elements.apiBaseUrl.value || DEFAULT_API_BASE_URL);
   localStorage.setItem(STORAGE_KEYS.apiKey, elements.apiKey.value || '');
   localStorage.setItem(STORAGE_KEYS.model, elements.apiModel.value.trim() || DEFAULT_MODEL);
+  localStorage.setItem(STORAGE_KEYS.timeoutSeconds, String(normalizeTimeoutSeconds(elements.timeoutSeconds.value)));
   localStorage.setItem(STORAGE_KEYS.clearAfterSubmit, String(elements.clearAfterSubmit.checked));
 }
 
@@ -2966,7 +2963,6 @@ function activateSettingsTab(elements, tabName) {
 function clearComposer(elements) {
   elements.prompt.value = '';
   elements.images.value = '';
-  updateEndpointPreview(elements);
   renderAttachmentPreview(elements);
   refreshSubmitState(elements);
 }
@@ -2985,13 +2981,22 @@ async function executeTask(elements, task) {
   setBusy(elements, true);
   await persistTasks(elements);
 
+  const referenceImages = Array.from(task.referenceImages || []);
+  const timeoutSeconds = normalizeTimeoutSeconds(elements.timeoutSeconds.value);
+  const controller = new AbortController();
+  let requestTimedOut = false;
+  const timeoutId = window.setTimeout(() => {
+    requestTimedOut = true;
+    controller.abort();
+  }, timeoutSeconds * 1000);
+
   try {
     const request = buildImageRequest({
       apiBaseUrl: elements.apiBaseUrl.value,
       apiKey: elements.apiKey.value,
       model: elements.apiModel.value,
       prompt: task.prompt,
-      images: elements.images.files,
+      images: referenceImages,
       ...task.params
     });
 
@@ -2999,11 +3004,15 @@ async function executeTask(elements, task) {
       request,
       model: elements.apiModel.value,
       prompt: task.prompt,
-      images: elements.images.files,
-      params: task.params
+      images: referenceImages,
+      params: task.params,
+      timeoutSeconds
     }));
 
-    const response = await fetch(request.url, request.options);
+    const response = await fetch(request.url, {
+      ...request.options,
+      signal: controller.signal
+    });
     appendLog(elements, 'INFO', '收到 HTTP 响应', {
       status: response.status,
       ok: response.ok,
@@ -3031,21 +3040,25 @@ async function executeTask(elements, task) {
       throw error;
     }
 
-    task.results = imageSourcesFromPayload(payload);
+    task.results = imageSourcesFromPayload(payload, task.params.outputFormat);
     task.status = task.results.length > 0 ? 'success' : 'error';
     task.error = task.results.length > 0 ? '' : '接口没有返回图片';
     appendLog(elements, 'INFO', '请求成功', summarizePayloadForLog(payload));
   } catch (error) {
-    const message = diagnosticMessageForError(error);
+    const requestError = requestTimedOut
+      ? new Error(`请求超过 ${timeoutSeconds} 秒，已自动取消`)
+      : error;
+    const message = diagnosticMessageForError(requestError);
     task.status = 'error';
     task.error = message;
     appendLog(elements, 'ERROR', '请求失败', {
-      name: error?.name || 'Error',
-      status: error?.status || null,
+      name: requestError?.name || 'Error',
+      status: requestError?.status || null,
       message
     });
     showError(elements, message);
   } finally {
+    window.clearTimeout(timeoutId);
     setBusy(elements, false);
     await persistTasks(elements);
     renderTasks(elements);
@@ -3058,7 +3071,7 @@ async function submitGeneration(elements) {
   let requestPreview;
   const params = paramsFromElements(elements);
   const prompt = elements.prompt.value.trim();
-  const imageCount = elements.images.files.length;
+  const referenceImages = Array.from(elements.images.files || []);
 
   try {
     requestPreview = buildImageRequest({
@@ -3088,7 +3101,7 @@ async function submitGeneration(elements) {
     prompt,
     params,
     endpoint: new URL(requestPreview.url).pathname,
-    imageCount
+    referenceImages
   });
   tasks.unshift(task);
   taskIdsPendingEntryAnimation.add(task.id);
@@ -3105,6 +3118,15 @@ function retryTask(elements, taskId) {
   const task = tasks.find((item) => item.id === taskId);
 
   if (!task) {
+    return;
+  }
+
+  const referenceImages = Array.from(task.referenceImages || []);
+  if (task.imageCount > 0 && referenceImages.length !== task.imageCount) {
+    const message = '原始参考图未保存在当前缓存中，请重新上传后提交。';
+    task.error = message;
+    showError(elements, message);
+    renderTasks(elements);
     return;
   }
 
@@ -3141,7 +3163,6 @@ function bindEvents(elements) {
   });
 
   elements.images.addEventListener('change', () => {
-    updateEndpointPreview(elements);
     renderAttachmentPreview(elements);
   });
   elements.attachmentPreview.addEventListener('click', (event) => {
@@ -3236,6 +3257,7 @@ function bindEvents(elements) {
   elements.apiBaseUrl.addEventListener('input', () => saveSettings(elements));
   elements.apiKey.addEventListener('input', () => saveSettings(elements));
   elements.apiModel.addEventListener('input', () => saveSettings(elements));
+  elements.timeoutSeconds.addEventListener('input', () => saveSettings(elements));
   elements.clearAfterSubmit.addEventListener('change', () => saveSettings(elements));
 
   elements.clearLogButton.addEventListener('click', () => {
@@ -3263,7 +3285,6 @@ async function boot() {
   enhanceParameterSelects(elements);
   renderLogs(elements);
   await loadCachedTasks(elements);
-  updateEndpointPreview(elements);
   renderAttachmentPreview(elements);
   renderTasks(elements);
   refreshSubmitState(elements);
